@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client.js';
+import { supabase } from '../supabase/client.ts';
 
 class Tema {
     constructor({ id, descricao }) {

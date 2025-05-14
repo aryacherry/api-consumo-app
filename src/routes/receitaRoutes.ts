@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import ReceitaController from '../controllers/receitaController.js';
+import ReceitaController from '../controllers/receitaController.js';//Trocar.js por .ts
+import {Request, Response, NextFunction } from 'express-serve-static-core';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const upload = multer({
 });
 
 // Middleware para processar form-data
-const processFormData = (req, res, next) => {
+const processFormData = (req: Request, res:Response, next:NextFunction) => {
     upload.array('files', 8)(req, res, function(err) {
         if (err instanceof multer.MulterError) {
             return res.status(400).json({

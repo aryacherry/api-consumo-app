@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import swaggerJsDoc from 'swagger-jsdoc';
@@ -35,6 +35,7 @@ const CSS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
 class App {
+    public app:Application
     constructor() {
         this.app = express();
         this.middlewares();

@@ -1,15 +1,15 @@
-import { Router } from 'express';
-import dicaController from '../controllers/dicaController.js';
-import authMiddleware from '../middlewares/authMiddleware.js';
+import { Request, Response, NextFunction, Router } from 'express';
+import dicaController from '../controllers/dicaController.js'; //Trocar.js por .ts
+import authMiddleware from '../middlewares/authMiddleware.js';//Trocar.js por .ts
 import multer from 'multer';
 
-const router = new Router();
+const router = Router();
 // Configuração do Multer
 const upload = multer();
 
 // Middleware para processar form-data
-const processFormData = (req, res, next) => {
-    upload.array('subtemas', 5)(req, res, function (err) {
+const processFormData = (req: Request, res: Response, next: NextFunction) => {
+    upload.array('subtemas', 5)(req, res, (err: any) => {
         if (err instanceof multer.MulterError) {
             return res.status(400).json({
                 message: 'Erro',

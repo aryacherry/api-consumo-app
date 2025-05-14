@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import temaController from '../controllers/temaController.js';
-import authMiddleware from '../middlewares/authMiddleware.js';
+import temaController from '../controllers/temaController.js'; //Trocar.js por .ts
+import authMiddleware from '../middlewares/authMiddleware.js'; //Trocar.js por .ts
 
-const router = new Router();
+const router = Router();
 
 router.get('/tema', authMiddleware, temaController.index);
 router.get('/tema/:id', authMiddleware, temaController.checkIfExists);

@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import userController from '../controllers/userController.js';
-import userUpload from "../middlewares/uploadMiddleware.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
-
-const router = new Router();
+import userController from '../controllers/userController.js'; //Trocar.js por .ts
+import userUpload from "../middlewares/uploadMiddleware.js"; //Trocar.js por .ts
+import authMiddleware from "../middlewares/authMiddleware.js"; //Trocar.js por .ts
+ 
+const router = Router();
 
 /**
  * @swagger
