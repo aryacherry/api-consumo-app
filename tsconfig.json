@@ -111,7 +111,7 @@
     "skipLibCheck": true,
     
 },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/controllers/ingredienteController.js", "src/controllers/receitaController.js", "src/controllers/temaController.js", "src/controllers/userController.js"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/controllers/ingredienteController.ts", "src/controllers/receitaController.js", "src/controllers/temaController.ts", "src/controllers/userController.js"],
     "exclude": ["node_modules"]
     
 }

@@ -38,8 +38,8 @@ class Ingrediente {
     }
 
     // Método para salvar o ingrediente no banco de dados
-    async save(postagemId: number) {
-        let { data, error } = await supabase
+    async save(postagemId: number): Promise<{ data: any[] | null, error: Error | null }> {
+        const { data, error } = await supabase
             .from('ingredientes')
             .insert([
                 {
@@ -54,7 +54,7 @@ class Ingrediente {
             throw new Error(error.message);
         }
 
-        return data;
+        return { data, error };
     }
 }
 
