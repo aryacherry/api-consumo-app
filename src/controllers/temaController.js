@@ -1,5 +1,5 @@
-import { supabase } from '../supabase/client.js';
-import Tema from '../models/Tema.js';
+import { supabase } from '../supabase/client.ts';
+import Tema from '../models/Tema.ts';
 
 const temaController = {
     async index(req, res) {

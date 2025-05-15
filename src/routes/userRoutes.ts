@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import userController from '../controllers/userController.js'; //Trocar.js por .ts
-import userUpload from "../middlewares/uploadMiddleware.js"; //Trocar.js por .ts
-import authMiddleware from "../middlewares/authMiddleware.js"; //Trocar.js por .ts
+import userUpload from "../middlewares/uploadMiddleware.ts"; 
+import authMiddleware from "../middlewares/authMiddleware.ts"; 
  
 const router = Router();
 

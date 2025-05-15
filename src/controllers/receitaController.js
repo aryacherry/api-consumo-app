@@ -1,6 +1,6 @@
-import { supabase } from '../supabase/client.js';
-import { TEMAS_VALIDOS } from '../utils/temas_validos.js';
-import Ingrendiente from "../models/Ingrediente.js";
+import { supabase } from '../supabase/client.ts';
+import { TEMAS_VALIDOS } from '../utils/temas_validos.ts';
+import Ingrendiente from "../models/Ingrediente.ts";
 
 class ReceitaController {
     async create(req, res) {

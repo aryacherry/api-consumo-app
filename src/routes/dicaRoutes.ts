@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, Router } from 'express';
-import dicaController from '../controllers/dicaController.js'; //Trocar.js por .ts
-import authMiddleware from '../middlewares/authMiddleware.ts';//Trocar.js por .ts
+import dicaController from '../controllers/dicaController.ts'; 
+import authMiddleware from '../middlewares/authMiddleware.ts';
 import multer from 'multer';
 
 const router = Router();
@@ -38,7 +38,6 @@ const processFormData = (req: Request, res: Response, next: NextFunction) => {
  *         description: Erro ao listar as dicas
  */
 router.get('/dicas', dicaController.getAll);
-
 /**
  * @swagger
  * /api/dicas:
