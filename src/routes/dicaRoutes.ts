@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import dicaController from '../controllers/dicaController.js'; //Trocar.js por .ts
-import authMiddleware from '../middlewares/authMiddleware.js';//Trocar.js por .ts
+import authMiddleware from '../middlewares/authMiddleware.ts';//Trocar.js por .ts
 import multer from 'multer';
 
 const router = Router();
