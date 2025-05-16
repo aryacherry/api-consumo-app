@@ -9,6 +9,7 @@ interface Correlacao {
 }
 
 class ReceitaController {
+
     async create(req:Request, res:Response): Promise<void> {
         let imageUrls = [];
         try {
@@ -151,7 +152,6 @@ class ReceitaController {
             }
         }
     }
-
 
     async getAll(req:Request, res:Response): Promise<void> {
         try {
@@ -421,8 +421,12 @@ class ReceitaController {
         } catch (e) {
             if (imageUrls.length > 0) {
                 for (const url of imageUrls) {
-                    const fileName = url.split('/fotosReceitas/').pop();
-                    await supabase.storage.from('fotosReceitas').remove([fileName]);
+                    const fileName: string | undefined= url.split('/fotosReceitas/').pop();
+                    if (fileName) {
+                        await supabase.storage
+                            .from('fotosReceitas')
+                            .remove([fileName]);
+                    }
                 }
             }
             if (e instanceof Error) {
@@ -431,7 +435,6 @@ class ReceitaController {
             }
         }
     }
-
 
     async delete(req:Request, res:Response): Promise<void> {
         try {
@@ -556,6 +559,7 @@ class ReceitaController {
             }
         }
     }
+
     async getAllVerifiedByTheme(req:Request, res:Response): Promise<void> {
         try {
             const { tema } = req.params;
@@ -609,6 +613,7 @@ class ReceitaController {
             }
         }
     }
+
     async getAllNotVerifiedByTheme(req:Request, res:Response): Promise<void> {
         try {
             const { tema } = req.params;
@@ -659,6 +664,7 @@ class ReceitaController {
             }
         }
     }
+    
     async getAllByTheme(req:Request, res:Response): Promise<void> {
         try {
             const { tema } = req.params;
@@ -709,8 +715,6 @@ class ReceitaController {
             }
         }
     }
-
-
 
     async getReceitasPorSubtemas(req:Request, res:Response): Promise<void> {
         try {
