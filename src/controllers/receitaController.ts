@@ -1,9 +1,15 @@
 import { supabase } from '../supabase/client.ts';
 import { TEMAS_VALIDOS } from '../utils/temas_validos.ts';
 import Ingrendiente from "../models/Ingrediente.ts";
+import { Request, Response } from 'express';
+
+interface Correlacao {
+  subtema: string;
+  tema: string;
+}
 
 class ReceitaController {
-    async create(req, res) {
+    async create(req:Request, res:Response) {
         let imageUrls = [];
         try {
             if (!req.body.titulo || !req.body.conteudo || !req.body.idUsuario || !req.body.tema || !req.body.subtema) {
@@ -89,7 +95,7 @@ class ReceitaController {
             if (Array.isArray(ingredientes) && ingredientes.length > 0) {
                 for (const ingrediente of ingredientes) {
                     const ingredienteObj = new Ingrendiente(ingrediente);
-                    const { valid, errors } = ingredienteObj.validate();
+                    const { valid, errors = []} = ingredienteObj.validate();
     
                     if (!valid) {
                         throw new Error(errors.join(', '));
@@ -100,7 +106,7 @@ class ReceitaController {
             }
             
 
-            if (req.files?.length > 0) {
+            if (Array.isArray(req.files) && req.files.length > 0) {
                 for (const file of req.files) {
                     const fileName = `${receitaData.id}-${Date.now()}-${file.originalname}`;
                     const { error: uploadError } = await supabase.storage
@@ -138,12 +144,14 @@ class ReceitaController {
             });
         } catch (e) {
             console.log(e)
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
 
 
-    async getAll(req, res) {
+    async getAll(req:Request, res:Response) {
         try {
             const { data: receitas, error: receitasError } = await supabase
                 .from('receitas')
@@ -155,7 +163,7 @@ class ReceitaController {
             const receitasComDetalhes = await Promise.all(receitas.map(async (receita) => {
                 const subtemas = new Set();
 
-                receita.correlacaoReceitas?.forEach(correlacao => {
+                receita.correlacaoReceitas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 });
 
@@ -170,17 +178,19 @@ class ReceitaController {
                     ultimaAlteracao: receita.ultimaAlteracao,
                     tema: receita.correlacaoReceitas?.[0]?.tema,
                     subtemas: Array.from(subtemas),
-                    fotos: receita.fotosReceitas?.map(foto => foto.url) || []
+                    fotos: receita.fotosReceitas?.map((foto: { url: string }) => foto.url) || []
                 };
             }));
 
             return res.json(receitasComDetalhes);
         } catch (e) {
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
 
-    async getById(req, res) {
+    async getById(req:Request, res:Response) {
         try {
             const { data: receita, error: receitaError } = await supabase
                 .from('receitas')
@@ -197,9 +207,9 @@ class ReceitaController {
             if (receitaError) throw receitaError;
 
             const tema = receita.correlacaoReceitas?.[0]?.tema || null;
-            const subtemas = receita.correlacaoReceitas?.map(correlacao => correlacao.subtema) || [];
+            const subtemas = receita.correlacaoReceitas?.map((correlacao: Correlacao) => correlacao.subtema) || [];
             const ingredientes = receita.ingredientes || [];
-            const fotos = receita.fotosReceitas?.map(foto => foto.url) || [];
+            const fotos = receita.fotosReceitas?.map((foto: { url: string }) => foto.url) || [];
 
             return res.json({
                 id: receita.id,
@@ -216,11 +226,13 @@ class ReceitaController {
                 fotos
             });
         } catch (e) {
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
 
-    async update(req, res) {
+    async update(req:Request, res:Response) {
         let imageUrls = [];
         try {
             if (!req.body.titulo && !req.body.conteudo && !req.files?.length) {
@@ -309,23 +321,29 @@ class ReceitaController {
 
                 for (const ingrediente of req.body.ingredientes) {
                     const ingredienteObj = new Ingrendiente(ingrediente);
-                    const { valid, errors } = ingredienteObj.validate();
+                    const { valid, errors =[] } = ingredienteObj.validate();
+                   
+                    const id = Number(req.params.id); //transforma a string em um number por conta que o .save pede um number
+
+                      if (isNaN(id)) {
+                      throw new Error('ID inválido');
+                           }
 
                     if (!valid) {
                         throw new Error(errors.join(', '));
                     }
 
-                    await ingredienteObj.save(req.params.id);
+                    await ingredienteObj.save(id);
                 }
             }
 
-            if (req.files?.length > 0) {
+            if (Array.isArray(req.files) && req.files.length > 0) {
                 const { data: fotosAntigas } = await supabase
                     .from('fotosReceitas')
                     .select('*')
                     .eq('id', req.params.id);
 
-                if (fotosAntigas?.length > 0) {
+                if (fotosAntigas && fotosAntigas.length > 0) {
                     for (const foto of fotosAntigas) {
                         const fileName = foto.url.split('/fotosReceitas/').pop();
                         await supabase.storage
@@ -398,12 +416,14 @@ class ReceitaController {
                     await supabase.storage.from('fotosReceitas').remove([fileName]);
                 }
             }
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
 
 
-    async delete(req, res) {
+    async delete(req:Request, res:Response) {
         try {
             const { data: receita, error: findError } = await supabase
                 .from('receitas')
@@ -464,11 +484,13 @@ class ReceitaController {
 
         } catch (e) {
             console.error('Erro completo:', e);
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
 
-    async verify(req, res) {
+    async verify(req:Request, res:Response) {
         try {
             const verifyBy = req.body.verifyBy;
             const id = req.params.id;
@@ -509,10 +531,12 @@ class ReceitaController {
                 data: receita
             });
         } catch (e) {
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
-    async getAllVerifiedByTheme(req, res) {
+    async getAllVerifiedByTheme(req:Request, res:Response) {
         try {
             const { tema } = req.params;
             if (!TEMAS_VALIDOS.includes(tema)) {
@@ -535,7 +559,7 @@ class ReceitaController {
             const receitasComDetalhes = await Promise.all(receitas.map(async (receita) => {
                 const subtemas = new Set();
 
-                receita.correlacaoReceitas?.forEach(correlacao => {
+                receita.correlacaoReceitas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 });
 
@@ -550,16 +574,18 @@ class ReceitaController {
                     ultimaAlteracao: receita.ultimaAlteracao,
                     tema: receita.correlacaoReceitas?.[0]?.tema,
                     subtemas: Array.from(subtemas),
-                    fotos: receita.fotosReceitas?.map(foto => foto.url) || []
+                    fotos: receita.fotosReceitas?.map((foto: { url: string }) => foto.url) || []
                 };
             }));
 
             return res.json(receitasComDetalhes);
         } catch (e) {
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
-    async getAllNotVerifiedByTheme(req, res) {
+    async getAllNotVerifiedByTheme(req:Request, res:Response) {
         try {
             const { tema } = req.params;
             if (!TEMAS_VALIDOS.includes(tema)) {
@@ -582,7 +608,7 @@ class ReceitaController {
             const receitasComDetalhes = await Promise.all(receitas.map(async (receita) => {
                 const subtemas = new Set();
 
-                receita.correlacaoReceitas?.forEach(correlacao => {
+                receita.correlacaoReceitas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 });
 
@@ -597,16 +623,18 @@ class ReceitaController {
                     ultimaAlteracao: receita.ultimaAlteracao,
                     tema: receita.correlacaoReceitas?.[0]?.tema,
                     subtemas: Array.from(subtemas),
-                    fotos: receita.fotosReceitas?.map(foto => foto.url) || []
+                    fotos: receita.fotosReceitas?.map((foto: { url: string }) => foto.url) || []
                 };
             }));
 
             return res.json(receitasComDetalhes);
         } catch (e) {
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
-    async getAllByTheme(req, res) {
+    async getAllByTheme(req:Request, res:Response) {
         try {
             const { tema } = req.params;
             if (!TEMAS_VALIDOS.includes(tema)) {
@@ -629,7 +657,7 @@ class ReceitaController {
             const receitasComDetalhes = await Promise.all(receitas.map(async (receita) => {
                 const subtemas = new Set();
 
-                receita.correlacaoReceitas?.forEach(correlacao => {
+                receita.correlacaoReceitas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 });
 
@@ -644,19 +672,21 @@ class ReceitaController {
                     ultimaAlteracao: receita.ultimaAlteracao,
                     tema: receita.correlacaoReceitas?.[0]?.tema,
                     subtemas: Array.from(subtemas),
-                    fotos: receita.fotosReceitas?.map(foto => foto.url) || []
+                    fotos: receita.fotosReceitas?.map((foto: { url: string }) => foto.url) || []
                 };
             }));
 
             return res.json(receitasComDetalhes);
         } catch (e) {
+            if (e instanceof Error) {
             return handleError(res, e.message);
+            }
         }
     }
 
 
 
-    async getReceitasPorSubtemas(req, res) {
+    async getReceitasPorSubtemas(req:Request, res:Response) {
         try {
             const tema = req.params.tema;
             const subtemas = req.params.subtema.split(',');
@@ -697,7 +727,7 @@ class ReceitaController {
             const receitasComDetalhes = await Promise.all(receitas.map(async (receita) => {
                 const subtemas = new Set();
 
-                receita.correlacaoReceitas?.forEach(correlacao => {
+                receita.correlacaoReceitas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 });
 
@@ -712,7 +742,7 @@ class ReceitaController {
                     ultimaAlteracao: receita.ultimaAlteracao,
                     tema: receita.correlacaoReceitas?.[0]?.tema,
                     subtemas: Array.from(subtemas),
-                    fotos: receita.fotosReceitas?.map(foto => foto.url) || []
+                    fotos: receita.fotosReceitas?.map((foto: { url: string }) => foto.url) || []
                 };
             }));
 
@@ -720,12 +750,14 @@ class ReceitaController {
         }
         catch (e) {
             console.error('Erro ao buscar receitas por subtemas:', e);
+            if (e instanceof Error) {
             return res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
+            }
         }
     }
 }
 
-function handleError(res, detail = 'Ocorreu um erro.', status = 500) {
+function handleError(res:Response, detail = 'Ocorreu um erro.', status = 500) {
     console.error('Erro:', detail);
     if (!res.headersSent) {
         return res.status(status).json({

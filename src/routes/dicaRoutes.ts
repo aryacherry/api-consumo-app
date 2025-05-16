@@ -279,3 +279,6 @@ router.get('/dicas/:tema/:subtema', dicaController.getDica);
 router.get('/:tema/dicas/especialistas', dicaController.getSpecialistsDica);
 
 export default router;
+
+
+
