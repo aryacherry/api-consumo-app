@@ -11,7 +11,7 @@ interface Correlacao {
 
 class DicaController {
 
-    async create(req:Request, res:Response) {
+    async create(req:Request, res:Response): Promise<void>{
         try {
             const dica = new Dica(req.body);
             const { valid, errors } = dica.validate();
@@ -113,7 +113,8 @@ class DicaController {
                 if (correlacaoError) return handleError(res, correlacaoError.message, 500, correlacaoError.details);
             }
 
-            return res.status(201).json({ message: 'Dica criada com sucesso', data: dicaData[0] });
+            res.status(201).json({ message: 'Dica criada com sucesso', data: dicaData[0] });
+            return;
         } catch (e) {
              if (e instanceof Error) {
             return handleError(res, e.message);
@@ -121,7 +122,7 @@ class DicaController {
         }
     }
 
-    async getAll(_req:Request, res:Response) {
+    async getAll(_req:Request, res:Response): Promise<void>{
 
         try {
             
@@ -154,8 +155,8 @@ class DicaController {
                 };
             }));
 
-            return res.json(dicasComDetalhes);
-
+             res.json(dicasComDetalhes);
+                return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -163,7 +164,7 @@ class DicaController {
         }
     }
 
-    async getByCode(req:Request, res:Response) {
+    async getByCode(req:Request, res:Response): Promise<void>{
         try {
             const { data: dica, error } = await supabase
                 .from('dicas')
@@ -179,7 +180,7 @@ class DicaController {
                 if (correlacao.subtema) subtemas.add(correlacao.subtema);
             });
 
-            return res.json({
+                res.json({
                 id: dica.id,
                 titulo: dica.titulo,
                 conteudo: dica.conteudo,
@@ -199,7 +200,7 @@ class DicaController {
         }
     }
 
-    async update(req:Request, res:Response) {
+    async update(req:Request, res:Response): Promise<void> {
         try {
             const updatedDica = new Dica(req.body);
             const { valid, errors } = updatedDica.validate();
@@ -295,7 +296,8 @@ class DicaController {
                 }
             }
 
-            return res.status(200).json({ message: 'Dica e correlações atualizadas com sucesso', data: dicaAtualizada[0] });
+             res.status(200).json({ message: 'Dica e correlações atualizadas com sucesso', data: dicaAtualizada[0] });
+               return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -303,7 +305,7 @@ class DicaController {
         }
     }
 
-    async delete(req:Request, res:Response) {
+    async delete(req:Request, res:Response): Promise<void> {
         try {
             const dicaId = req.params.id;
 
@@ -321,7 +323,8 @@ class DicaController {
 
             if (deleteDicaError) return handleError(res, deleteDicaError.message, 500, deleteDicaError.details);
 
-            return res.status(204).end();
+             res.status(204).end();
+             return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -329,7 +332,7 @@ class DicaController {
         }
     }
 
-    async verify(req:Request, res:Response) {
+    async verify(req:Request, res:Response): Promise<void>{
         try {
             const verifyBy = req.body.verifyBy;
             const id = req.params.id;
@@ -366,7 +369,8 @@ class DicaController {
 
             if (!dica) return handleError(res, `A dica com o código ${id} não foi encontrada.`, 404, 'Dica não encontrada');
 
-            return res.status(200).json({ message: `A dica com o código ${id} foi verificada com sucesso pelo usuário com o email ${verifyBy}.` });
+             res.status(200).json({ message: `A dica com o código ${id} foi verificada com sucesso pelo usuário com o email ${verifyBy}.` });
+               return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -374,7 +378,7 @@ class DicaController {
         }
     }
 
-    async getAllVerifiedByTheme(req:Request, res:Response) {
+    async getAllVerifiedByTheme(req:Request, res:Response): Promise<void> {
         try {
 
             const { tema } = req.params;
@@ -422,7 +426,8 @@ class DicaController {
                 };
             }));
 
-            return res.json(dicasComDetalhes);
+             res.json(dicasComDetalhes);
+              return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -430,7 +435,7 @@ class DicaController {
         }
     }
 
-    async getAllNotVerifiedByTheme(req:Request, res:Response) {
+    async getAllNotVerifiedByTheme(req:Request, res:Response): Promise<void> {
         try {
 
             const { tema } = req.params;
@@ -478,7 +483,8 @@ class DicaController {
                 };
             }));
 
-            return res.json(dicasComDetalhes);
+             res.json(dicasComDetalhes);
+
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -486,7 +492,7 @@ class DicaController {
         }
     }
 
-    async getAllByTheme(req:Request, res:Response) {
+    async getAllByTheme(req:Request, res:Response): Promise<void> {
         try {
 
             const { tema } = req.params;
@@ -533,7 +539,8 @@ class DicaController {
                 };
             }));
 
-            return res.json(dicasComDetalhes);
+             res.json(dicasComDetalhes);
+              return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -541,7 +548,7 @@ class DicaController {
         }
     }
 
-    async getDica(req:Request, res:Response) {
+    async getDica(req:Request, res:Response): Promise<void> {
         try {
             const tema = req.params.tema;
             const subtemas = req.params.subtema.split(',');
@@ -557,17 +564,20 @@ class DicaController {
 
             if (correlacaoError) {
                 console.error('Erro ao buscar correlações:', correlacaoError);
-                return res.status(500).json({ error: `Erro ao buscar correlações de dicas: ${correlacaoError.message}` });
+                 res.status(500).json({ error: `Erro ao buscar correlações de dicas: ${correlacaoError.message}` });
+                 return;
             }
 
             if (!correlacoes || correlacoes.length === 0) {
-                return res.status(200).json([]);
+                 res.status(200).json([]);
+                 return;
             }
 
 
             const idsDicas = [...new Set(correlacoes.map(correlacao => correlacao.idDicas))];
             if (idsDicas.length === 0) {
-                return res.status(200).json([]);
+                 res.status(200).json([]);
+                 return;
             }
 
             const { data: dicas, error: dicasError } = await supabase
@@ -579,7 +589,8 @@ class DicaController {
 
             if (dicasError) {
                 console.error('Erro ao buscar dicas:', dicasError);
-                return res.status(500).json({ error: `Erro ao buscar as dicas: ${dicasError.message}` });
+                 res.status(500).json({ error: `Erro ao buscar as dicas: ${dicasError.message}` });
+                 return;
             }
 
             const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
@@ -603,16 +614,18 @@ class DicaController {
                 };
             }));
 
-            return res.json(dicasComDetalhes);
+             res.json(dicasComDetalhes);
+             return;
         } catch (e) {
             console.error('Erro ao buscar dicas por subtemas:', e);
             if (e instanceof Error) {
-            return res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
+             res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
+             return;
             }
         }
     }
 
-    async getSpecialistsDica(req:Request, res:Response) {
+    async getSpecialistsDica(req:Request, res:Response): Promise<void> {
         try {
 
             const { tema } = req.params;
@@ -662,11 +675,13 @@ class DicaController {
                 };
             }));
 
-            return res.json(dicasComDetalhes);
+             res.json(dicasComDetalhes);
+             return;
         } catch (e) {
             console.error('Erro ao buscar dicas por subtemas:', e);
             if (e instanceof Error) {
-            return res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
+             res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
+             return;
             }
         }
     }
@@ -675,7 +690,8 @@ class DicaController {
 function handleError(res: Response, detail = 'An error has occurred.', status = 500, message = 'Internal Server Error') {
     console.log(`Error: ${message} - ${detail}`);
     if (!res.headersSent) {
-        return res.status(status).json({ message, detail });
+        res.status(status).json({ message, detail });
+        return;
     }
 }
 

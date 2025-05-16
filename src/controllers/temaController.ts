@@ -9,13 +9,16 @@ const temaController = {
 
             if (error) {
                  res.status(500).json({ error: 'Erro ao buscar temas', details: error.message });
+                 return;
             }
 
              res.status(200).json(data);
+             return;
 
         } catch (error) {
              if (error instanceof Error) {
              res.status(500).json({ error: 'Erro no servidor', details: error.message });
+             return;
              }
         }
     },
@@ -33,14 +36,17 @@ const temaController = {
             const tema = await Tema.findById(TemaDoID);
             if (!tema) {
                  res.status(404).json({ exists: false });
+                 return;
             }
 
              res.status(200).json({ exists: true });
+                return;
 
         } catch (error) {
              if (error instanceof Error) {
              res.status(500).json({ error: 'Erro no servidor', details: error.message });
-             }
+             return;
+            }
         }
     },
 
@@ -81,18 +87,22 @@ const temaController = {
 
             if (error) {
                  res.status(500).json({ error: 'Erro ao deletar tema', details: error.message });
-            }
+                 return;
+        }
 
             if (!data || data.length === 0) {
                  res.status(404).json({ error: `Tema com id ${id} não encontrado` });
-            }
+                 return;
+        }
 
              res.status(204).end();
+             return;
 
         } catch (error) {
              if (error instanceof Error) {
              res.status(500).json({ error: 'Erro no servidor', details: error.message });
-             }
+             return;
+            }
         }
     }
 };
