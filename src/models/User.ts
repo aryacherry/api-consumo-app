@@ -9,7 +9,7 @@ interface UserInterface {
     telefone: string;
     nivelConsciencia: number;
     isMonitor: boolean;
-    fotoUsu: string;
+    fotoUsu: string | null;
 }
 
 interface SaveResponse {
@@ -34,7 +34,7 @@ class User {
     telefone: string;
     nivelConsciencia: number;
     isMonitor: boolean;
-    fotoUsu: string;
+    fotoUsu: string | null;
 
     // Construtor da classe
     constructor({ email, tokens, senha, nome, telefone, nivelConsciencia, isMonitor, fotoUsu } : UserInterface) {

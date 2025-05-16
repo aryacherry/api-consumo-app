@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import temaController from '../controllers/temaController.ts'; //Trocar.js por .ts
+import temaController from '../controllers/temaController.ts';
 import authMiddleware from '../middlewares/authMiddleware.ts'; 
 
 const router = Router();
