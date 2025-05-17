@@ -3,7 +3,7 @@ import userController from '../controllers/userController.ts';
 import userUpload from "../middlewares/uploadMiddleware.ts"; 
 import authMiddleware from "../middlewares/authMiddleware.ts"; 
  
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger
