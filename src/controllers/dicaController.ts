@@ -1,8 +1,8 @@
 
-import Dica from '../models/Dica.ts';
-import { supabase } from '../supabase/client.ts';
-import { TEMAS_VALIDOS } from '../utils/temas_validos.ts';
-import Subtema from "../models/Subtemas.ts";
+import Dica from '../models/Dica';
+import { supabase } from '../supabase/client';
+import { TEMAS_VALIDOS } from '../utils/temas_validos';
+import Subtema from "../models/Subtemas";
 import { Request, Response } from 'express';
 interface Correlacao {
   subtema: string;

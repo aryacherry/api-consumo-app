@@ -3,10 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import userRoutes from './routes/userRoutes.ts';
-import dicasRoutes from './routes/dicaRoutes.ts';
-import temaRoutes from './routes/temaRoutes.ts';
-import receitaRoutes from './routes/receitaRoutes.ts';
+import userRoutes from './routes/userRoutes';
+import dicasRoutes from './routes/dicaRoutes';
+import temaRoutes from './routes/temaRoutes';
+import receitaRoutes from './routes/receitaRoutes';
 
 const swaggerOptions = {
     definition: {

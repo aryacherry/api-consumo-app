@@ -1,6 +1,6 @@
-import { supabase } from '../supabase/client.ts';
-import { TEMAS_VALIDOS } from '../utils/temas_validos.ts';
-import Ingrendiente from "../models/Ingrediente.ts";
+import { supabase } from '../supabase/client';
+import { TEMAS_VALIDOS } from '../utils/temas_validos';
+import Ingrendiente from "../models/Ingrediente";
 import { Request, Response } from 'express';
 
 interface Correlacao {

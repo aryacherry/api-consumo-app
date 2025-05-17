@@ -1,5 +1,5 @@
-import Ingrediente from '../models/Ingrediente.ts';
-import { supabase } from '../supabase/client.ts';
+import Ingrediente from '../models/Ingrediente';
+import { supabase } from '../supabase/client';
 import { Request, Response } from 'express';
 
 class IngredienteController {

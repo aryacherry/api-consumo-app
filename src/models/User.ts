@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client.ts'; // Importa o cliente Supabase configurado
+import { supabase } from '../supabase/client'; // Importa o cliente Supabase configurado
 import argon2 from 'argon2';
 
 interface UserInterface {

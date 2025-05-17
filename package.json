@@ -6,12 +6,11 @@
   "directories": {
     "doc": "docs"
   },
-  "type": "module",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.ts",
     "dev": "tsx watch ./src/app.ts",
     "start": "node ./dist/app.js",
-    "build": "tsc --showConfig"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",

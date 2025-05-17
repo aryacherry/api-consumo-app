@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client.ts';
+import { supabase } from '../supabase/client';
 
 interface SubtemaInterface {
     id: number;

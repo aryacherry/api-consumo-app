@@ -1,4 +1,4 @@
-import Dica from '../models/Dica.ts';
+import Dica from '../models/Dica';
 
 describe('Dica Model', () => {
   it('should pass with original assertions', () => {

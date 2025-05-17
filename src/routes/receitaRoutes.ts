@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import multer, { Multer } from 'multer';
-import ReceitaController from '../controllers/receitaController.ts';
+import ReceitaController from '../controllers/receitaController';
 import {Request, Response, NextFunction, RequestHandler } from 'express-serve-static-core';
 
 const router: Router = express.Router();

@@ -1,5 +1,5 @@
-import User from '../models/User.ts';
-import { supabase } from '../supabase/client.ts';
+import User from '../models/User';
+import { supabase } from '../supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';

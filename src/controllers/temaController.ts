@@ -1,5 +1,5 @@
-import { supabase } from '../supabase/client.ts';
-import Tema from '../models/Tema.ts';
+import { supabase } from '../supabase/client';
+import Tema from '../models/Tema';
 import { Request, Response } from 'express';
 
 const temaController = {

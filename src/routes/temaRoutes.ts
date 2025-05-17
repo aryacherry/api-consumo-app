@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import temaController from '../controllers/temaController.ts';
-import authMiddleware from '../middlewares/authMiddleware.ts'; 
+import temaController from '../controllers/temaController';
+import authMiddleware from '../middlewares/authMiddleware'; 
 
 const router: Router = Router();
 
