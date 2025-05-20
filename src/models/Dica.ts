@@ -24,11 +24,11 @@ class Dica {
     validate() {
         const errors = [];
 
-        if (!this.usuarioId || typeof this.usuarioId !== 'string' || this.usuarioId.length < 3 || this.usuarioId.length <= 50) {
+        if (!this.usuarioId || typeof this.usuarioId !== 'string' || this.usuarioId.length < 3 || this.usuarioId.length > 50) {
             errors.push('Nome do criador deve ser um texto e ter entre 3 e 50 caracteres.');
         }
 
-        if (!this.conteudo || typeof this.conteudo !== 'string' ||this.conteudo.length < 3 || this.conteudo.length < 1000) {
+        if (!this.conteudo || typeof this.conteudo !== 'string' || this.conteudo.length < 3 || this.conteudo.length > 1000) {
             errors.push('Conteúdo deve ser um texto e ter entre 3 e 1000 caracteres.');
         }
 
