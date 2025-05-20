@@ -36,7 +36,7 @@ class Receita {
     }
 
     validate() {
-        let errors = [];
+        const errors = [];
 
         // Validação do título
         if (!this.titulo) {

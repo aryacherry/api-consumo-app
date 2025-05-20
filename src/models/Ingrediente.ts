@@ -16,7 +16,7 @@ class Ingrediente {
 
     // Método para validar os dados do ingrediente
     validate() {
-        let errors = [];
+        const errors = [];
 
         if (this.nomeIngrediente.length < 1 || this.nomeIngrediente.length > 20) {
             errors.push('Nome do ingrediente deve ter entre 1 e 20 caracteres.');
@@ -38,7 +38,7 @@ class Ingrediente {
     }
 
     // Método para salvar o ingrediente no banco de dados
-    async save(postagemId: number): Promise<{ data: any[] | null, error: Error | null }> {
+    async save(postagemId: number): Promise<{ data: unknown[] | null, error: Error | null }> {
         const { data, error } = await supabase
             .from('ingredientes')
             .insert([
