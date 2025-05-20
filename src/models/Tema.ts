@@ -1,11 +1,23 @@
-import { supabase } from '../supabase/client.js';
+import { supabase } from '../supabase/client';
+
+interface SubtemaInterface {
+    id: number;
+    descricao: string;
+}
 
 class Tema {
-    constructor({ id, descricao }) {
+
+    // Definindo os atributos da classe
+    id: number;
+    descricao: string;
+
+    // Construtor da classe
+    constructor({ id, descricao } : SubtemaInterface) {
         this.id = id;
         this.descricao = descricao;
     }
 
+    // Método para validar os dados do tema
     validate() {
         const errors = [];
 
@@ -20,20 +32,25 @@ class Tema {
         return { valid: true };
     }
 
-    async save() {
+    async save(): Promise<SubtemaInterface> {
         const { data, error } = await supabase
             .from('tema')
             .insert([{ descricao: this.descricao }])
             .select();
 
         if (error) {
-            throw new Error('Erro ao salvar o tema: ' + error.message);
+            throw new Error(`Erro ao salvar o tema: ${error.message}`);
+        }
+
+        // Verificação para garantir que data não é null ou vazio
+        if (!data || data.length === 0) {
+            throw new Error('Nenhum dado retornado ao salvar o tema.');
         }
 
         return data[0];
     }
 
-    static async findById(id) {
+    static async findById(id: number) {
         const { data, error } = await supabase
             .from('tema')
             .select('*')
@@ -47,7 +64,7 @@ class Tema {
         return data;
     }
 
-    static async deleteById(id) {
+    static async deleteById(id: number) {
         const { data, error } = await supabase
             .from('tema')
             .delete()
@@ -55,7 +72,7 @@ class Tema {
             .select();
 
         if (error) {
-            throw new Error('Erro ao deletar o tema: ' + error.message);
+            throw new Error(`Erro ao deletar o tema: ${error.message}`);
         }
 
         return data;

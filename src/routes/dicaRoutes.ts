@@ -1,24 +1,27 @@
+import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
-import dicaController from '../controllers/dicaController.js';
-import authMiddleware from '../middlewares/authMiddleware.js';
+import dicaController from '../controllers/dicaController'; 
+import authMiddleware from '../middlewares/authMiddleware';
 import multer from 'multer';
+import type { Multer } from 'multer';
 
-const router = new Router();
+const router: Router = Router();
 // Configuração do Multer
-const upload = multer();
+const upload: Multer = multer();
 
 // Middleware para processar form-data
-const processFormData = (req, res, next) => {
-    upload.array('subtemas', 5)(req, res, function (err) {
+const processFormData = (req: Request, res: Response, next: NextFunction) => {
+    upload.array('subtemas', 5)(req, res, (err: unknown) => {
         if (err instanceof multer.MulterError) {
             return res.status(400).json({
                 message: 'Erro',
                 detail: err.message
             });
-        } else if (err) {
+        }
+        if (err) {
             return res.status(500).json({
                 message: 'Erro',
-                detail: err.message
+                detail: (err as Error).message
             });
         }
         next();
@@ -38,7 +41,6 @@ const processFormData = (req, res, next) => {
  *         description: Erro ao listar as dicas
  */
 router.get('/dicas', dicaController.getAll);
-
 /**
  * @swagger
  * /api/dicas:
@@ -280,3 +282,6 @@ router.get('/dicas/:tema/:subtema', dicaController.getDica);
 router.get('/:tema/dicas/especialistas', dicaController.getSpecialistsDica);
 
 export default router;
+
+
+
