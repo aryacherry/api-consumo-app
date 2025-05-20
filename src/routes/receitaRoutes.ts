@@ -1,7 +1,9 @@
-import express, { Router } from 'express';
-import multer, { Multer } from 'multer';
+import express from 'express';
+import type { Router } from 'express';
+import multer from 'multer';
+import type { Multer } from 'multer';
 import ReceitaController from '../controllers/receitaController';
-import {Request, Response, NextFunction, RequestHandler } from 'express-serve-static-core';
+import type { Request, Response, NextFunction, RequestHandler } from 'express-serve-static-core';
 
 const router: Router = express.Router();
 
@@ -15,13 +17,14 @@ const upload: Multer = multer({
 
 // Middleware para processar form-data
 const processFormData: RequestHandler = (req: Request, res:Response, next:NextFunction) => {
-    upload.array('files', 8)(req, res, function(err) {
+    upload.array('files', 8)(req, res, (err) => {
         if (err instanceof multer.MulterError) {
             return res.status(400).json({
                 message: 'Erro no upload',
                 detail: err.message
             });
-        } else if (err) {
+        } 
+        if (err) {
             return res.status(500).json({
                 message: 'Erro',
                 detail: err.message
