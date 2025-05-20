@@ -49,13 +49,13 @@ class User {
     }
 
     validate() {
-        let errors = [];
+        const errors = [];
 
         if (!this.nome || this.nome.length < 3 || this.nome.length > 51) {
             errors.push('Nome deve ter entre 3 e 51 caracteres.');
         }
 
-        let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!this.email || !emailRegex.test(this.email)) {
             errors.push('Email inválido.');
         }
@@ -64,7 +64,7 @@ class User {
             errors.push('Token inválido.');
         }
 
-        let telefoneRegex = /^\+?[1-9]\d{1,14}$/; // Validação de telefone
+        const telefoneRegex = /^\+?[1-9]\d{1,14}$/; // Validação de telefone
         if (!this.telefone || !telefoneRegex.test(this.telefone)) {
             errors.push('Número de telefone inválido.');
         }
@@ -87,9 +87,9 @@ class User {
 
     // Método para salvar se o usuário já existe no banco de dados
     async save(){
-        let password_hash = await argon2.hash(this.senha);
+        const password_hash = await argon2.hash(this.senha);
 
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .from('usuarios')
             .insert([
                 {
@@ -114,7 +114,7 @@ class User {
 
     // Método para validar a senha do usuário
     async passwordIsValid(password: string): Promise<boolean> {
-        let { data: user, error } = await supabase
+        const { data: user, error } = await supabase
             .from('usuarios') // Mudança para 'usuarios'
             .select('senha')
             .eq('email', this.email)
