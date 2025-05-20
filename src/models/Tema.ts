@@ -19,7 +19,7 @@ class Tema {
 
     // Método para validar os dados do tema
     validate() {
-        let errors = [];
+        const errors = [];
 
         if (!this.descricao || typeof this.descricao !== 'string') {
             errors.push(`A descrição "${this.descricao}" não é válida.`);
@@ -33,13 +33,13 @@ class Tema {
     }
 
     async save(): Promise<SubtemaInterface> {
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .from('tema')
             .insert([{ descricao: this.descricao }])
             .select();
 
         if (error) {
-            throw new Error('Erro ao salvar o tema: ' + error.message);
+            throw new Error(`Erro ao salvar o tema: ${error.message}`);
         }
 
         // Verificação para garantir que data não é null ou vazio
@@ -51,7 +51,7 @@ class Tema {
     }
 
     static async findById(id: number) {
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .from('tema')
             .select('*')
             .eq('id', id)
@@ -65,14 +65,14 @@ class Tema {
     }
 
     static async deleteById(id: number) {
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .from('tema')
             .delete()
             .eq('id', id)
             .select();
 
         if (error) {
-            throw new Error('Erro ao deletar o tema: ' + error.message);
+            throw new Error(`Erro ao deletar o tema: ${error.message}`);
         }
 
         return data;
