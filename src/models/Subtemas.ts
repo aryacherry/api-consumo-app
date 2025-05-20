@@ -23,7 +23,7 @@ class Subtema {
 
   // Método para validar os dados dos subtemas
   async validate(): Promise<ResultadoValidacao> {
-    let resultado: ResultadoValidacao = {
+    const resultado: ResultadoValidacao = {
       subtemasNaoExistentes: [],
       subtemasExistentes: [],
       erros: []
@@ -33,11 +33,11 @@ class Subtema {
       throw new Error("Nenhum subtema enviado.");
     }
     
-    for (let subtema of this.subtemas) {
-      let subtemaFormatado = subtema.trim(); 
+    for (const subtema of this.subtemas) {
+      const subtemaFormatado = subtema.trim(); 
 
       try {
-        let subtemaExiste = await this.verifyBd(subtemaFormatado);
+        const subtemaExiste = await this.verifyBd(subtemaFormatado);
 
         if (subtemaExiste) {
           resultado.subtemasExistentes.push(subtemaFormatado);
@@ -45,8 +45,12 @@ class Subtema {
           await this.createSubtema(subtemaFormatado);
           resultado.subtemasExistentes.push(subtemaFormatado); 
         }
-      } catch (e: any) {
-        resultado.erros.push({ subtema: subtemaFormatado, mensagem: e.message });
+      } catch (e: unknown) {
+        let mensagem = 'Erro desconhecido'; // O erro capturado por ser qualquer tipo, por isso inicializamos com uma mensagem padrão
+        if (e instanceof Error) {
+          mensagem = e.message;
+        }
+        resultado.erros.push({ subtema: subtemaFormatado, mensagem });
       }
     }
 
@@ -56,7 +60,7 @@ class Subtema {
   // Método para verificar se o subtema já existe no banco de dados
   async verifyBd(subtema: string): Promise<boolean> {
     try {
-      let { data: subtemaBd, error } = await supabase
+      const { data: subtemaBd, error } = await supabase
         .from('subTema')
         .select('descricao')
         .eq('descricao', subtema);
@@ -74,7 +78,7 @@ class Subtema {
   // Método para criar um novo subtema no banco de dados
   async createSubtema(subtema: string): Promise<void> {
     try {
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('subTema')
         .insert([{ descricao: subtema }]);
 
