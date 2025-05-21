@@ -1,12 +1,29 @@
-import { supabase } from '../supabase/client.js';
+import { supabase } from '../supabase/client';
 
-class Subtema {
-  constructor(subtemas) {
+interface ErroSubtema {
+  subtema: string;
+  mensagem: string;
+}
+
+interface ResultadoValidacao {
+  subtemasNaoExistentes: string[]; 
+  subtemasExistentes: string[];
+  erros: ErroSubtema[];
+}
+
+class Subtema { 
+
+  // Definindo os atributos da classe
+  subtemas: string[];
+
+  // Construtor da classe
+  constructor(subtemas: string[]) {
     this.subtemas = Array.isArray(subtemas) ? subtemas : [];
   }
 
-  async validate() {
-    const resultado = {
+  // Método para validar os dados dos subtemas
+  async validate(): Promise<ResultadoValidacao> {
+    const resultado: ResultadoValidacao = {
       subtemasNaoExistentes: [],
       subtemasExistentes: [],
       erros: []
@@ -16,7 +33,7 @@ class Subtema {
       throw new Error("Nenhum subtema enviado.");
     }
     
-    for (let subtema of this.subtemas) {
+    for (const subtema of this.subtemas) {
       const subtemaFormatado = subtema.trim(); 
 
       try {
@@ -28,15 +45,20 @@ class Subtema {
           await this.createSubtema(subtemaFormatado);
           resultado.subtemasExistentes.push(subtemaFormatado); 
         }
-      } catch (e) {
-        resultado.erros.push({ subtema: subtemaFormatado, mensagem: e.message });
+      } catch (e: unknown) {
+        let mensagem = 'Erro desconhecido'; // O erro capturado por ser qualquer tipo, por isso inicializamos com uma mensagem padrão
+        if (e instanceof Error) {
+          mensagem = e.message;
+        }
+        resultado.erros.push({ subtema: subtemaFormatado, mensagem });
       }
     }
 
     return resultado;
   }
 
-  async verifyBd(subtema) {
+  // Método para verificar se o subtema já existe no banco de dados
+  async verifyBd(subtema: string): Promise<boolean> {
     try {
       const { data: subtemaBd, error } = await supabase
         .from('subTema')
@@ -47,13 +69,14 @@ class Subtema {
         throw new Error(error.message);
       }
 
-      return subtemaBd && subtemaBd.length > 0;
+      return !!(subtemaBd && subtemaBd.length > 0); // Obs: Verificar se está retornando alguma confirmação
     } catch (e) {
       throw new Error('Erro ao verificar o subtema no banco de dados.');
     }
   }
 
-  async createSubtema(subtema) {
+  // Método para criar um novo subtema no banco de dados
+  async createSubtema(subtema: string): Promise<void> {
     try {
       const { data, error } = await supabase
         .from('subTema')
