@@ -1,7 +1,7 @@
 import { Prisma, temasubtema } from "../../generated/prisma";
 
 export interface TemaSubtemaRepository {
-    create(temaSubtema: Prisma.temasubtemaUncheckedCreateInput): Promise<temasubtema>;
-    findByTemaAndSubtema({ tema, subtema }: Pick<temasubtema, "tema" | "subtema">): Promise<temasubtema[]>;
+    create({id, subtema, tema}: Prisma.temasubtemaUncheckedCreateInput): Promise<temasubtema>;
+    findByTemaAndSubtema({ tema, subtema }: { tema?: NonNullable<temasubtema['tema']>; subtema?: NonNullable<temasubtema['subtema']> }): Promise<temasubtema[]>;
     getSubtemasByTema({ tema }: { tema: NonNullable<temasubtema['tema']> }): Promise<temasubtema[]>;
 }
