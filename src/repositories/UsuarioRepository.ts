@@ -3,13 +3,13 @@ import { Prisma, usuarios } from "../../generated/prisma/client";
 export interface UsuarioRepository {
     findAll(): Promise<usuarios[]>;
     findByEmail({ email }: Pick<usuarios, 'email'>): Promise<usuarios | null>;
-    getMonitorStatusByEmail({ email }: Pick<usuarios, 'email'>): Promise<boolean>;
+    getMonitorStatusByEmail({ email }: Pick<usuarios, 'email'>): Promise<boolean | null>;
     create({
         email, 
         dicas, 
-        fotousu,
-        ismonitor,
-        nivelconsciencia,
+        foto_usuario,
+        is_monitor,
+        nivel_consciencia,
         nome,
         receitas,
         senha,
@@ -18,9 +18,9 @@ export interface UsuarioRepository {
     }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios>;
     updateOne({
             email, 
-            fotousu,
-            ismonitor,
-            nivelconsciencia,
+            foto_usuario,
+            is_monitor,
+            nivel_consciencia,
             nome,
             senha,
             telefone,

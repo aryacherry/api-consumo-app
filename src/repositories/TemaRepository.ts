@@ -1,8 +1,8 @@
-import { tema, temasubtema } from "../../generated/prisma";
+import { temas, temas_subtemas } from "../../generated/prisma";
 
 export interface TemaRepository {
-    findAll(): Promise<tema[]>;
-    findById({ id }: Pick<tema, 'id'>): Promise<tema | null>;
-    delete({ id }: Pick<tema, 'id'>): Promise<void>;
+    findAll(): Promise<temas[]>;
+    findById({ id }: Pick<temas, 'id'>): Promise<temas | null>;
+    delete({ id }: Pick<temas, 'id'>): Promise<void>;
     /* checkIfExists(id: number): Promise<boolean>; */
 }

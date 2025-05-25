@@ -1,9 +1,9 @@
-import { Prisma, subtema } from "../../generated/prisma";
+import { Prisma, subtemas } from "../../generated/prisma";
 
 export interface SubtemaRepository {
-    create(subtema: Prisma.subtemaUncheckedCreateInput): Promise<subtema>;
-    findById(id: number): Promise<subtema | null>;
-    findAll(): Promise<subtema[]>;
-    update(id: number, subtema: Prisma.subtemaUncheckedUpdateInput): Promise<subtema | null>;
+    create(subtema: Prisma.subtemasUncheckedCreateInput): Promise<subtemas>;
+    findById(id: number): Promise<subtemas | null>;
+    findAll(): Promise<subtemas[]>;
+    update(id: number, subtema: Prisma.subtemasUncheckedUpdateInput): Promise<subtemas | null>;
     delete(id: number): Promise<void>;
 }

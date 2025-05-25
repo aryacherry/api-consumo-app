@@ -1,7 +1,7 @@
-import { Prisma, correlacaodicas} from "../../generated/prisma";
+import { Prisma, dicas_subtemas} from "../../generated/prisma";
 
 export interface CorrelacaoDicasRepository {
-    create(correlacaoDicas: Prisma.correlacaodicasUncheckedCreateInput): Promise<correlacaodicas>;
-    findByDicaId(dicaId: number): Promise<correlacaodicas[]>;
+    create(correlacaoDicas: Prisma.dicas_subtemasUncheckedCreateInput): Promise<dicas_subtemas>;
+    findByDicaId(dicaId: number): Promise<dicas_subtemas[]>;
     delete(dicaId: number): Promise<void>;
 }

@@ -1,14 +1,14 @@
-import { receitas, correlacaoreceitas, Prisma, ingredientes, fotosreceitas } from "../../generated/prisma";
+import { receitas, receitas_subtemas, Prisma, ingredientes } from "../../generated/prisma";
 
 export interface ReceitaRepository {
     create(receita: Prisma.receitasUncheckedCreateInput): Promise<receitas>;
     update(id: number, receita: Prisma.receitasUncheckedUpdateInput): Promise<receitas>;
     delete(id: number): Promise<void>;
-    findById(id: number): Promise<receitas & { correlacaoreceitas: correlacaoreceitas[], ingredientes: ingredientes[], fotosreceitas: fotosreceitas[] } | null>;
-    findAll(): Promise<(receitas & { correlacaoreceitas: correlacaoreceitas[], ingredientes: ingredientes[], fotosreceitas: fotosreceitas[] })[]>;
-    findAllByTheme(tema: string): Promise<(receitas & { correlacaoreceitas: correlacaoreceitas[], ingredientes: ingredientes[], fotosreceitas: fotosreceitas[] })[]>;
-    findAllVerifiedByTheme(tema: string): Promise<(receitas & { correlacaoreceitas: correlacaoreceitas[], ingredientes: ingredientes[], fotosreceitas: fotosreceitas[] })[]>;
-    findAllNotVerifiedByTheme(tema: string): Promise<(receitas & { correlacaoreceitas: correlacaoreceitas[], ingredientes: ingredientes[], fotosreceitas: fotosreceitas[] })[]>;
-    getReceitasPorSubtemas(tema: string, subtemas: string[]): Promise<(receitas & { correlacaoreceitas: correlacaoreceitas[], ingredientes: ingredientes[], fotosreceitas: fotosreceitas[] })[]>;
+    findById(id: number): Promise<receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] } | null>;
+    findAll(): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
+    findAllByTheme(tema: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
+    findAllVerifiedByTheme(tema: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
+    findAllNotVerifiedByTheme(tema: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
+    getReceitasPorSubtemas(tema: string, subtemas: string[]): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
     verify(id: number, verifyBy: string): Promise<receitas>;
 }

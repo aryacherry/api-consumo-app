@@ -1,4 +1,4 @@
-import { PrismaClient, tema, temasubtema } from "../../../generated/prisma/client";
+import { PrismaClient, temas, temas_subtemas } from "../../../generated/prisma/client";
 import { TemaRepository } from "../TemaRepository";
 
 export class PrismaTemaRepository implements TemaRepository {
@@ -9,17 +9,17 @@ export class PrismaTemaRepository implements TemaRepository {
     }
 
     async findAll() {
-        return this.prisma.tema.findMany();
+        return this.prisma.temas.findMany();
     }
 
-    async findById({ id }: Pick<tema, 'id'>) {
-        return this.prisma.tema.findUnique({
+    async findById({ id }: Pick<temas, 'id'>) {
+        return this.prisma.temas.findUnique({
             where: { id },
         });
     }
 
-    async delete({ id }: Pick<tema, 'id'>) {
-        await this.prisma.tema.delete({
+    async delete({ id }: Pick<temas, 'id'>) {
+        await this.prisma.temas.delete({
             where: { id },
         });
     }

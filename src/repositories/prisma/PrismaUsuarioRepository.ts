@@ -13,13 +13,13 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         });
     }
     
-    async updateOne({ email, fotousu, ismonitor, nivelconsciencia, nome, senha, telefone, tokens, }: Required<Pick<usuarios, 'email'>> & usuarios): Promise<usuarios> {
+    async updateOne({ email, foto_usuario, is_monitor, nivel_consciencia, nome, senha, telefone, tokens, }: Required<Pick<usuarios, 'email'>> & usuarios): Promise<usuarios> {
         return this.prisma.usuarios.update({
             where: { email },
             data: {
-                fotousu,
-                ismonitor,
-                nivelconsciencia,
+                foto_usuario,
+                is_monitor,
+                nivel_consciencia,
                 nome,
                 senha,
                 telefone,
@@ -43,12 +43,11 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         });
     }
 
-    async getMonitorStatusByEmail({ email }: Pick<usuarios, 'email'>) {
+    async getMonitorStatusByEmail({ email }: Pick<usuarios, 'email'>): Promise<boolean | null> {
         const statusMonitor = await this.prisma.usuarios.findUnique({
             where: { email },
-            select: { ismonitor: true },
+            select: { is_monitor: true },
         });
-
-        return Boolean(statusMonitor?.ismonitor);
+        return statusMonitor ? statusMonitor.is_monitor : null;
     }
-}
+} 

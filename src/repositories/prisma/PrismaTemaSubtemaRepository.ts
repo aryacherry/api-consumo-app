@@ -1,4 +1,4 @@
-import { Prisma, temasubtema } from "../../../generated/prisma";
+import { Prisma, temas_subtemas } from "../../../generated/prisma";
 import { TemaSubtemaRepository } from "../TemaSubtemaRepository";
 import { PrismaClient } from "../../../generated/prisma/client";
 
@@ -7,28 +7,27 @@ export class PrismaTemaSubtemaRepository implements TemaSubtemaRepository {
     constructor() {
         this.prisma = new PrismaClient();
     }
-    async create({ id, subtema, tema }: Prisma.temasubtemaUncheckedCreateInput) {
-        return this.prisma.temasubtema.create({
+    async create({ tema_id, subtema_id }: Prisma.temas_subtemasUncheckedCreateInput) {
+        return this.prisma.temas_subtemas.create({
             data: {
-                id,
-                subtema,
-                tema
+                tema_id,
+                subtema_id
             }
         });
     }
 
-    async findByTemaAndSubtema({ tema, subtema }: { tema?: NonNullable<temasubtema['tema']>; subtema?: NonNullable<temasubtema['subtema']> }) {
-        return this.prisma.temasubtema.findMany({
+    async findByTemaAndSubtema({ temaId, subtemaId }: { temaId?: NonNullable<temas_subtemas['tema_id']>; subtemaId?: NonNullable<temas_subtemas['subtema_id']> }) {
+        return this.prisma.temas_subtemas.findMany({
             where: {
-                tema,
-                subtema
+                tema_id: temaId,
+                subtema_id: subtemaId
             }
         });
     }
 
-    async getSubtemasByTema({ tema }: { tema: NonNullable<temasubtema['tema']> }) {
-        return this.prisma.temasubtema.findMany({
-            where: { tema }
+    async getSubtemasByTema({ temaId }: { temaId: NonNullable<temas_subtemas['tema_id']> }) {
+        return this.prisma.temas_subtemas.findMany({
+            where: { tema_id: temaId }
         });
     }
 }
