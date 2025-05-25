@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -54,8 +55,8 @@ model receitas {
   is_verify        Boolean
   usuario_id       String
   verify_by        String
-  data_criacao     DateTime @db.Timestamp(3)
-  data_alteracao   DateTime @db.Timestamp(3)
+  data_criacao     DateTime
+  data_alteracao   DateTime
   image_source     String
   usuario          usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
   ingredientes     ingredientes[]
@@ -77,8 +78,8 @@ model dicas {
   conteudo       String
   is_verify      Boolean
   verify_by      String
-  data_criacao   DateTime @db.Timestamp(3)
-  data_alteracao DateTime @db.Timestamp(3)
+  data_criacao   DateTime 
+  data_alteracao DateTime 
   usuario        usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
   dicas_subtemas dicas_subtemas[]
 }
