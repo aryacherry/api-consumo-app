@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -8,114 +7,108 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
-model correlacaodicas {
-  id                                       BigInt   @id
-  iddicas                                  BigInt?
-  subtema                                  String?
-  assunto                                  String?
-  dicas                                    dicas?   @relation(fields: [iddicas], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  subtema_correlacaodicas_subtemaTosubtema subtema? @relation("correlacaodicas_subtemaTosubtema", fields: [subtema], references: [descricao], onDelete: NoAction, onUpdate: NoAction)
+model usuarios {
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  senha              String
+  nome               String
+  telefone           String
+  nivel_consciencia  String
+  is_monitor         Boolean
+  tokens             String
+  foto_usuario       String
+  receitas           receitas[]
+  dicas              dicas[]
 }
 
-model correlacaoreceitas {
-  id                                          BigInt    @id
-  idreceitas                                  BigInt?
-  subtema                                     String?
-  assunto                                     String?
-  receitas                                    receitas? @relation(fields: [idreceitas], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  subtema_correlacaoreceitas_subtemaTosubtema subtema?  @relation("correlacaoreceitas_subtemaTosubtema", fields: [subtema], references: [descricao], onDelete: NoAction, onUpdate: NoAction)
+model temas {
+  id              String           @id @default(uuid())
+  titulo          String           @unique
+  descricao       String
+  temas_subtemas  temas_subtemas[]
 }
 
-model dicas {
-  id              BigInt            @id
-  usuarioid       String?
-  conteudo        String?
-  isverify        Boolean?
-  verifyby        String?
-  datacriacao     DateTime?         @db.Timestamptz(6)
-  ultimaalteracao DateTime?         @db.Timestamptz(6)
-  correlacaodicas correlacaodicas[]
-  usuarios        usuarios?         @relation(fields: [usuarioid], references: [email], onDelete: NoAction, onUpdate: NoAction)
+
+model subtemas {
+  id         String   @id @default(uuid())
+  titulo     String   @unique
+  descricao  String
+  temas_subtemas temas_subtemas[]
+  receitas_subtemas receitas_subtemas[]
+  dicas_subtemas dicas_subtemas[]
 }
 
-model fotosreceitas {
-  idfoto    BigInt    @id
-  id        BigInt?
-  url       String?
-  createdat DateTime? @db.Timestamptz(6)
-  receitas  receitas? @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
+model temas_subtemas {
+  tema_id     String
+  subtema_id  String
+  tema        temas     @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema     subtemas  @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
-model ingredientes {
-  idingrediente BigInt    @id
-  quantidade    String?
-  medida        String?
-  ingrediente   String?
-  postagemid    BigInt?
-  receitas      receitas? @relation(fields: [postagemid], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model perguntaquiz {
-  id                 BigInt          @id
-  pergunta           String?
-  respostaverdadeira String?
-  respostasquiz      respostasquiz[]
+  @@id([tema_id, subtema_id])
 }
 
 model receitas {
-  id                 BigInt               @id
-  titulo             String?
-  conteudo           String?
-  isverify           Boolean?
-  idusuario          String?
-  verifyby           String?
-  datacriacao        DateTime?            @db.Timestamptz(6)
-  ultimaalteracao    DateTime?            @db.Timestamptz(6)
-  correlacaoreceitas correlacaoreceitas[]
-  fotosreceitas      fotosreceitas[]
-  ingredientes       ingredientes[]
-  usuarios           usuarios?            @relation(fields: [idusuario], references: [email], onDelete: NoAction, onUpdate: NoAction)
+  id               String    @id @default(uuid())
+  titulo           String
+  conteudo         String
+  is_verify        Boolean
+  usuario_id       String
+  verify_by        String
+  data_criacao     DateTime @db.Timestamp(3)
+  data_alteracao   DateTime @db.Timestamp(3)
+  image_source     String
+  usuario          usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  ingredientes     ingredientes[]
+  receitas_subtemas receitas_subtemas[]
 }
 
-model respostasquiz {
-  id           BigInt        @id
-  idpergunta   BigInt?
-  resposta     String?
-  perguntaquiz perguntaquiz? @relation(fields: [idpergunta], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model ingredientes {
+  id           String    @id @default(uuid())
+  quantidade   String
+  medida       String
+  nome         String
+  receita_id   String
+  receita      receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
-model subtema {
-  id                                                     BigInt               @id
-  descricao                                              String?              @unique
-  correlacaodicas_correlacaodicas_subtemaTosubtema       correlacaodicas[]    @relation("correlacaodicas_subtemaTosubtema")
-  correlacaoreceitas_correlacaoreceitas_subtemaTosubtema correlacaoreceitas[] @relation("correlacaoreceitas_subtemaTosubtema")
-  temasubtema_temasubtema_subtemaTosubtema               temasubtema[]        @relation("temasubtema_subtemaTosubtema")
+model dicas {
+  id             String    @id @default(uuid())
+  usuario_id     String
+  conteudo       String
+  is_verify      Boolean
+  verify_by      String
+  data_criacao   DateTime @db.Timestamp(3)
+  data_alteracao DateTime @db.Timestamp(3)
+  usuario        usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  dicas_subtemas dicas_subtemas[]
 }
 
-model tema {
-  id                                 BigInt        @id
-  descricao                          String?       @unique
-  temasubtema_temasubtema_temaTotema temasubtema[] @relation("temasubtema_temaTotema")
+model receitas_subtemas {
+  receita_id   String
+  subtema_id   String
+  assunto      String
+  receita      receitas  @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema      subtemas  @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([receita_id, subtema_id])
 }
 
-model temasubtema {
-  id                                   BigInt   @id
-  tema                                 String?
-  subtema                              String?
-  subtema_temasubtema_subtemaTosubtema subtema? @relation("temasubtema_subtemaTosubtema", fields: [subtema], references: [descricao], onDelete: NoAction, onUpdate: NoAction)
-  tema_temasubtema_temaTotema          tema?    @relation("temasubtema_temaTotema", fields: [tema], references: [descricao], onDelete: NoAction, onUpdate: NoAction)
+model dicas_subtemas {
+  dica_id      String
+  subtema_id   String
+  assunto      String
+  dica         dicas     @relation(fields: [dica_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema      subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([dica_id, subtema_id])
 }
 
-model usuarios {
-  email            String     @id
-  senha            String?
-  nome             String?
-  telefone         String?
-  nivelconsciencia BigInt?
-  ismonitor        Boolean?
-  tokens           String?
-  fotousu          String?
-  dicas            dicas[]
-  receitas         receitas[]
+model quizes {
+  id                  String  @id @default(uuid())
+  pergunta            String
+  resposta_verdadeira String
+  ordem               Int
+  app                 String  @unique
+  titulo              String
+  descricao           String
 }
