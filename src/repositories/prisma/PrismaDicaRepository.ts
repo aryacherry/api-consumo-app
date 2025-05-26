@@ -32,8 +32,15 @@ export class PrismaDicaRepository implements DicaRepository {
     update(dica: Prisma.dicasUncheckedUpdateInput): Promise<dicas> {
         throw new Error("Method not implemented.");
     }
-    findAllWithCorrelacaoOrderById(): Promise<(dicas & { dicas_subtemas: dicas_subtemas[]; })[]> {
-        throw new Error("Method not implemented.");
+    findAllWithCorrelacaoOrderById() {
+        return this.prisma.dicas.findMany({
+            orderBy: {
+                id: 'asc'
+            },
+            include: {
+                dicas_subtemas: true
+            }
+        });
     }
-    
+
 }

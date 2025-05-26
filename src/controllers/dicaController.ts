@@ -193,37 +193,32 @@ class DicaController {
 
         try {
             
-            const { data: dicas, error } = await supabase
+            /* const { data: dicas, error } = await supabase
                 .from('dicas')
                 .select('*, correlacaoDicas(tema, subtema)')
                 .order('id', { ascending: false });
 
             if (error) return handleError(res, error.message, 500, error.details);
-
+ */         const dicasRepository = new PrismaDicaRepository();
+            const dicas = await dicasRepository.findAllWithCorrelacaoOrderById();
             const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                const subtemas = new Set();
-
-                dica.correlacaoDicas?.forEach((correlacao: Correlacao) => {
-                    if (correlacao.subtema) subtemas.add(correlacao.subtema);
-                });
-
                 return {
                     id: dica.id,
                     titulo: dica.titulo,
                     conteudo: dica.conteudo,
-                    isVerify: dica.isVerify,
-                    idUsuario: dica.idUsuario,
-                    verifyBy: dica.verifyBy,
-                    dataCriacao: dica.dataCriacao,
-                    ultimaAlteracao: dica.ultimaAlteracao,
-                    tema: dica.correlacaoDicas?.[0]?.tema || null,
-                    subtemas: Array.from(subtemas),
-                    isCreatedBySpecialist: dica.isCreatedBySpecialist
+                    isVerify: dica.is_verify,
+                    idUsuario: dica.usuario_id,
+                    verifyBy: dica.verify_by,
+                    dataCriacao: dica.data_criacao,
+                    ultimaAlteracao: dica.data_alteracao,
+                    tema: dica.dicas_subtemas[0].subtema_id,
+                    subtemas: Array.from(dica.dicas_subtemas),
+                    isCreatedBySpecialist: dica.is_created_by_specialist
                 };
             }));
 
              res.json(dicasComDetalhes);
-                return;
+            return;
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
