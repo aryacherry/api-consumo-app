@@ -4,6 +4,10 @@ import { supabase } from '../supabase/client';
 import { TEMAS_VALIDOS } from '../utils/temas_validos';
 import Subtema from "../models/Subtemas";
 import { Request, Response } from 'express';
+import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository';
+import { PrismaDicaRepository } from '../repositories/prisma/PrismaDicaRepository';
+import { PrismaTemaSubtemaRepository } from '../repositories/prisma/PrismaTemaSubtemaRepository';
+import { PrismaDicaSubtemaRepository } from '../repositories/prisma/PrismaDicaSubtemaRepository';
 interface Correlacao {
   subtema: string;
   tema: string;
@@ -32,19 +36,27 @@ class DicaController {
                 return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Tema inválido');
             }
 
-            const { data: usuarioData, error: usuarioError } = await supabase
+            /* const { data: usuarioData, error: usuarioError } = await supabase
                 .from('usuarios')
                 .select('isMonitor')
                 .eq('email', dica.usuarioId)
-                .single();
-
-            if (usuarioError) {
-                return handleError(res, usuarioError.message, 500, 'Erro ao verificar usuário');
+                .single(); */
+            let isCreatedBySpecialist;
+            try {
+                const usuarioRepository = new PrismaUsuarioRepository();
+                const isMonitor = await usuarioRepository.getMonitorStatusByEmail({
+                    email: dica.usuarioId
+                })
+                if (isMonitor === null) {
+                    return handleError(res, `O usuário com o email ${dica.usuarioId} não foi encontrado.`, 404, 'Usuário não encontrado');
+                }
+                isCreatedBySpecialist = isMonitor
+            } catch (error) {
+                return handleError(res, String(error), 500, 'Erro ao verificar usuário');
             }
 
-            const isCreatedBySpecialist = usuarioData?.isMonitor || false;
 
-            const { data: dicaData, error: dicaError } = await supabase
+            /* const { data: dicaData, error: dicaError } = await supabase
                 .from('dicas')
                 .insert({
                     usuarioid: dica.usuarioId,
@@ -56,9 +68,23 @@ class DicaController {
                     ultimaAlteracao: new Date(),
                     iscreatedbyspecialist: isCreatedBySpecialist,
                 })
-                .select();
-
-            if (dicaError) return handleError(res, dicaError.message, 500, dicaError.details);
+                .select(); */
+                let dicaData;
+                try {
+                    const dicaRepository = new PrismaDicaRepository();
+                    dicaData = await dicaRepository.create({
+                        usuario_id: dica.usuarioId,
+                        conteudo: dica.conteudo,
+                        titulo: titulo,
+                        is_verify: false,
+                        verify_by: '',
+                        data_criacao: new Date(),
+                        data_alteracao: new Date(),
+                        is_created_by_specialist: isCreatedBySpecialist
+                    });
+                } catch (error) {
+                    return handleError(res, String(error), 400, 'Dica inválida');
+                }
 
             const subtemaObj = new Subtema(subtemas);
             if (subtemas.length > 0) {
@@ -69,7 +95,7 @@ class DicaController {
                 }
 
                 for (let subtema of subtemas) {
-                    const { data: temaSubtemaData, error: temaSubtemaError } = await supabase
+                    /* const { data: temaSubtemaData, error: temaSubtemaError } = await supabase
                         .from('temaSubtema')
                         .select('*')
                         .eq('tema', tema)
@@ -77,10 +103,22 @@ class DicaController {
 
                     if (temaSubtemaError) {
                         return handleError(res, temaSubtemaError.message, 500, 'Erro ao verificar relação tema-subtema');
+                    } */
+
+                    let temaSubtemaData;
+                    try {
+                        const temaSubtemaRepository = new PrismaTemaSubtemaRepository();
+                        temaSubtemaData = await temaSubtemaRepository.findByTemaAndSubtema({
+                            temaId: tema,
+                            subtemaId: subtema
+                        });
+                    } catch (error) {
+                        return handleError(res, String(error), 500, 'Erro ao verificar relação tema-subtema');
                     }
 
+
                     if (temaSubtemaData.length === 0) {
-                        const { error: insertTemaSubtemaError } = await supabase
+                        /* const { error: insertTemaSubtemaError } = await supabase
                             .from('temaSubtema')
                             .insert({
                                 tema: tema,
@@ -89,10 +127,19 @@ class DicaController {
 
                         if (insertTemaSubtemaError) {
                             return handleError(res, insertTemaSubtemaError.message, 500, 'Erro ao criar relação tema-subtema');
+                        } */
+                       const temaSubtemaRepository = new PrismaTemaSubtemaRepository();
+                        try {
+                            await temaSubtemaRepository.create({
+                                tema_id: tema,
+                                subtema_id: subtema
+                            });
+                        } catch (error) {
+                            return handleError(res, String(error), 400, 'Erro ao criar relação tema-subtema');
                         }
                     }
 
-                    const { error: correlacaoError } = await supabase
+                    /* const { error: correlacaoError } = await supabase
                         .from('correlacaoDicas')
                         .insert({
                             idDicas: dicaData[0].id,
@@ -100,10 +147,19 @@ class DicaController {
                             subtema: subtema,
                         });
 
-                    if (correlacaoError) return handleError(res, correlacaoError.message, 500, correlacaoError.details);
+                    if (correlacaoError) return handleError(res, correlacaoError.message, 500, correlacaoError.details); */
+                    try {
+                        const temaSubtemaRepository = new PrismaTemaSubtemaRepository();
+                        await temaSubtemaRepository.create({
+                            tema_id: tema,
+                            subtema_id: subtema
+                        });
+                    } catch (error) {
+                        return handleError(res, String(error), 400, 'Erro ao criar relação tema-subtema');
+                    }
                 }
             } else {
-                const { error: correlacaoError } = await supabase
+                /* const { error: correlacaoError } = await supabase
                     .from('correlacaoDicas')
                     .insert({
                         idDicas: dicaData[0].id,
@@ -111,9 +167,20 @@ class DicaController {
                     });
 
                 if (correlacaoError) return handleError(res, correlacaoError.message, 500, correlacaoError.details);
+             */
+                try {
+                    const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
+                    await dicaSubtemaRepository.create({
+                        dica_id: dicaData.id,
+                        subtema_id: tema,
+                        assunto: ''
+                    });
+                } catch (error) {
+                    return handleError(res, String(error), 500, 'Erro ao criar relação dica-subtema');
+                }
             }
 
-            res.status(201).json({ message: 'Dica criada com sucesso', data: dicaData[0] });
+            res.status(201).json({ message: 'Dica criada com sucesso', data: dicaData });
             return;
         } catch (e) {
              if (e instanceof Error) {

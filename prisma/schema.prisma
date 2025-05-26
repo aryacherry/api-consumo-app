@@ -8,108 +8,110 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
 model usuarios {
-  id                 String   @id @default(uuid())
-  email              String   @unique
-  senha              String
-  nome               String
-  telefone           String
-  nivel_consciencia  String
-  is_monitor         Boolean
-  tokens             String
-  foto_usuario       String
-  receitas           receitas[]
-  dicas              dicas[]
+  id                String     @id @default(uuid())
+  email             String     @unique
+  senha             String
+  nome              String
+  telefone          String
+  nivel_consciencia String
+  is_monitor        Boolean
+  tokens            String
+  foto_usuario      String
+  receitas          receitas[]
+  dicas             dicas[]
 }
 
 model temas {
-  id              String           @id @default(uuid())
-  titulo          String           @unique
-  descricao       String
-  temas_subtemas  temas_subtemas[]
+  id             String           @id @default(uuid())
+  titulo         String           @unique
+  descricao      String
+  temas_subtemas temas_subtemas[]
 }
 
-
 model subtemas {
-  id         String   @id @default(uuid())
-  titulo     String   @unique
-  descricao  String
-  temas_subtemas temas_subtemas[]
+  id                String              @id @default(uuid())
+  titulo            String              @unique
+  descricao         String
+  temas_subtemas    temas_subtemas[]
   receitas_subtemas receitas_subtemas[]
-  dicas_subtemas dicas_subtemas[]
+  dicas_subtemas    dicas_subtemas[]
 }
 
 model temas_subtemas {
-  tema_id     String
-  subtema_id  String
-  tema        temas     @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subtema     subtemas  @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  tema_id    String
+  subtema_id String
+  tema       temas    @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema    subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([tema_id, subtema_id])
 }
 
 model receitas {
-  id               String    @id @default(uuid())
-  titulo           String
-  conteudo         String
-  is_verify        Boolean
-  usuario_id       String
-  verify_by        String
-  data_criacao     DateTime
-  data_alteracao   DateTime
-  image_source     String
-  usuario          usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  ingredientes     ingredientes[]
+  id                String              @id @default(uuid())
+  titulo            String
+  conteudo          String
+  is_verify         Boolean
+  usuario_id        String
+  verify_by         String
+  data_criacao      DateTime
+  data_alteracao    DateTime
+  image_source      String
+  usuario           usuarios            @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  ingredientes      ingredientes[]
   receitas_subtemas receitas_subtemas[]
 }
 
 model ingredientes {
-  id           String    @id @default(uuid())
-  quantidade   String
-  medida       String
-  nome         String
-  receita_id   String
-  receita      receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  id         String   @id @default(uuid())
+  quantidade String
+  medida     String
+  nome       String
+  receita_id String
+  receita    receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model dicas {
-  id             String    @id @default(uuid())
-  usuario_id     String
-  conteudo       String
-  is_verify      Boolean
-  verify_by      String
-  data_criacao   DateTime 
-  data_alteracao DateTime 
-  usuario        usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  dicas_subtemas dicas_subtemas[]
+  id                       String           @id @default(uuid())
+  usuario_id               String
+  titulo                   String
+  conteudo                 String
+  is_verify                Boolean
+  verify_by                String
+  is_created_by_specialist Boolean
+  data_criacao             DateTime
+  data_alteracao           DateTime
+  usuario                  usuarios         @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  dicas_subtemas           dicas_subtemas[]
 }
 
 model receitas_subtemas {
-  receita_id   String
-  subtema_id   String
-  assunto      String
-  receita      receitas  @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subtema      subtemas  @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  receita_id String
+  subtema_id String
+  assunto    String
+  receita    receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema    subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([receita_id, subtema_id])
 }
 
 model dicas_subtemas {
-  dica_id      String
-  subtema_id   String
-  assunto      String
-  dica         dicas     @relation(fields: [dica_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subtema      subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  dica_id    String
+  subtema_id String
+  assunto    String
+  dica       dicas    @relation(fields: [dica_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema    subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([dica_id, subtema_id])
 }
 
 model quizes {
-  id                  String  @id @default(uuid())
+  id                  String @id @default(uuid())
   pergunta            String
   resposta_verdadeira String
   ordem               Int
-  app                 String  @unique
+  app                 String @unique
   titulo              String
   descricao           String
 }
