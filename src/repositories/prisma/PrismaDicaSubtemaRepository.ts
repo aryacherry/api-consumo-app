@@ -14,7 +14,7 @@ export class PrismaDicaSubtemaRepository implements DicaSubtemaRepository {
             }
         });
     }
-    async delete(dicaId: string) {
+    async deleteMany(dicaId: string) {
         await this.prisma.dicas_subtemas.deleteMany({
             where: {
                 dica_id: dicaId
@@ -22,7 +22,7 @@ export class PrismaDicaSubtemaRepository implements DicaSubtemaRepository {
         });
     }
 
-    create({dica_id, subtema_id, assunto}: Prisma.dicas_subtemasUncheckedCreateInput){
+    create({ dica_id, subtema_id, assunto }: Prisma.dicas_subtemasUncheckedCreateInput) {
         return this.prisma.dicas_subtemas.create({
             data: {
                 dica_id,
