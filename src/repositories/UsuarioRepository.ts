@@ -27,4 +27,5 @@ export interface UsuarioRepository {
             tokens,
         }: Required<Pick<usuarios, 'email'>> & usuarios): Promise<usuarios>;
     delete({ email }: Pick<usuarios, 'email'>): Promise<void>;
+    updatePasswordByEmail(email: string, senha: string): Promise<void>;
 }

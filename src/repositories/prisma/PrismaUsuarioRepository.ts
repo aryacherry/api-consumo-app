@@ -7,6 +7,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     constructor() {
         this.prisma = new PrismaClient();
     }
+    
     async create(user: Prisma.usuariosUncheckedCreateInput) {
         return this.prisma.usuarios.create({
             data: user,
@@ -28,11 +29,19 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         });
     }
 
+    async updatePasswordByEmail(email: string, senha: string): Promise <void>{
+        await this.prisma.usuarios.update({
+            where: { email },
+            data: { senha },
+        });
+    }
+
     async delete({ email }: Pick<usuarios, 'email'>) {
         await this.prisma.usuarios.delete({
             where: { email },
         });
     }
+    
     async findAll() {
         return this.prisma.usuarios.findMany();
     }
