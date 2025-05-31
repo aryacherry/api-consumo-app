@@ -10,8 +10,8 @@ datasource db {
 }
 
 model usuarios {
-  id                String     @id @default(uuid())
-  email             String     @unique
+  id                String  @id @default(uuid())
+  email             String  @unique
   senha             String
   nome              String
   telefone          String
@@ -19,79 +19,90 @@ model usuarios {
   is_monitor        Boolean
   tokens            String
   foto_usuario      String
-  receitas          receitas[]
-  dicas             dicas[]
+
+  dicas                dicas[]
+  dicas_verificadas    dicas[]    @relation("VerificadorDica")
+  receitas             receitas[]
+  receitas_verificadas receitas[] @relation("VerificadorReceita")
 }
 
 model temas {
-  id             String           @id @default(uuid())
-  titulo         String           @unique
-  descricao      String
-  temas_subtemas temas_subtemas[]
+  id        String @id @default(uuid())
+  nome      String @unique
+  descricao String
+
+  dicas    dicas[]
+  receitas receitas[]
+  subtemas subtemas[]
 }
 
 model subtemas {
-  id                String              @id @default(uuid())
-  titulo            String              @unique
-  descricao         String
-  temas_subtemas    temas_subtemas[]
+  id        String @id @default(uuid())
+  tema_id   String
+  nome      String
+  descricao String
+
+  tema              temas               @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Restrict)
   receitas_subtemas receitas_subtemas[]
   dicas_subtemas    dicas_subtemas[]
-}
 
-model temas_subtemas {
-  tema_id    String
-  subtema_id String
-  tema       temas    @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subtema    subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-
-  @@id([tema_id, subtema_id])
+  @@unique([tema_id, nome])
 }
 
 model receitas {
-  id                String              @id @default(uuid())
-  titulo            String
-  conteudo          String
-  is_verify         Boolean
-  usuario_id        String
-  verify_by         String
-  data_criacao      DateTime
-  data_alteracao    DateTime
-  image_source      String
+  id             String   @id @default(uuid())
+  tema_id        String
+  titulo         String
+  conteudo       String
+  is_verify      Boolean
+  usuario_id     String
+  verify_by      String?
+  data_criacao   DateTime @default(now())
+  data_alteracao DateTime @updatedAt
+  image_source   String
+
+  tema              temas               @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Restrict)
   usuario           usuarios            @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  verify_by_user    usuarios?           @relation("VerificadorReceita", fields: [verify_by], references: [id], onUpdate: Cascade, onDelete: SetNull)
   ingredientes      ingredientes[]
   receitas_subtemas receitas_subtemas[]
 }
 
 model ingredientes {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
+  receita_id String
   quantidade String
   medida     String
   nome       String
-  receita_id String
-  receita    receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  receita receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model dicas {
-  id                       String           @id @default(uuid())
+  id                       String   @id @default(uuid())
   usuario_id               String
+  tema_id                  String
   titulo                   String
   conteudo                 String
   is_verify                Boolean
-  verify_by                String
+  verify_by                String?
   is_created_by_specialist Boolean
-  data_criacao             DateTime
-  data_alteracao           DateTime
-  usuario                  usuarios         @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  dicas_subtemas           dicas_subtemas[]
+  data_criacao             DateTime @default(now())
+  data_alteracao           DateTime @updatedAt
+
+  usuario        usuarios         @relation(fields: [usuario_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  tema           temas            @relation(fields: [tema_id], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  verify_by_user usuarios?        @relation("VerificadorDica", fields: [verify_by], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  dicas_subtemas dicas_subtemas[]
 }
 
 model receitas_subtemas {
   receita_id String
   subtema_id String
   assunto    String
-  receita    receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subtema    subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  receita receitas @relation(fields: [receita_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([receita_id, subtema_id])
 }
@@ -100,8 +111,9 @@ model dicas_subtemas {
   dica_id    String
   subtema_id String
   assunto    String
-  dica       dicas    @relation(fields: [dica_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subtema    subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  dica    dicas    @relation(fields: [dica_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subtema subtemas @relation(fields: [subtema_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([dica_id, subtema_id])
 }
@@ -111,7 +123,7 @@ model quizes {
   pergunta            String
   resposta_verdadeira String
   ordem               Int
-  app                 String @unique
+  app                 String
   titulo              String
   descricao           String
 }
