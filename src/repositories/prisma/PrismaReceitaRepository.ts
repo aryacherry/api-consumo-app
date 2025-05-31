@@ -55,12 +55,8 @@ export class PrismaReceitaRepository implements ReceitaRepository{
                 receitas_subtemas: {
                     some: {
                         subtema: {
-                            temas_subtemas: {
-                                some: {
-                                    tema: {
-                                        titulo: tema
-                                    }
-                                }
+                            tema: {
+                                nome: tema
                             }
                         }
                     }
@@ -80,12 +76,8 @@ export class PrismaReceitaRepository implements ReceitaRepository{
                 receitas_subtemas: {
                     some: {
                         subtema: {
-                            temas_subtemas: {
-                                some: {
-                                    tema: {
-                                        titulo: tema
-                                    }
-                                }
+                            tema: {
+                                nome: tema
                             }
                         }
                     }
@@ -105,12 +97,8 @@ export class PrismaReceitaRepository implements ReceitaRepository{
                 receitas_subtemas: {
                     some: {
                         subtema: {
-                            temas_subtemas: {
-                                some: {
-                                    tema: {
-                                        titulo: tema
-                                    }
-                                }
+                            tema: {
+                                nome: tema
                             }
                         }
                     }
@@ -130,14 +118,8 @@ export class PrismaReceitaRepository implements ReceitaRepository{
                 receitas_subtemas: {
                     some: {
                         subtema: {
-                            titulo: { in: subtemas},
-                            temas_subtemas: {
-                                some: {
-                                    tema: {
-                                        titulo: tema
-                                    }
-                                }
-                            }
+                            nome: { in: subtemas},
+                            tema: { nome: tema }
                         }
                     }
                 }
