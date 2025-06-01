@@ -1,4 +1,4 @@
-import { PrismaClient, temas, temas_subtemas } from "../../../generated/prisma/client";
+import { PrismaClient, subtemas, temas } from "../../../generated/prisma/client";
 import { TemaRepository } from "../TemaRepository";
 
 export class PrismaTemaRepository implements TemaRepository {
@@ -6,6 +6,16 @@ export class PrismaTemaRepository implements TemaRepository {
 
     constructor() {
         this.prisma = new PrismaClient();
+    }
+    getSubtemasByTema({ temaId }: { temaId: NonNullable<temas["id"]>; }): Promise<subtemas[]> {
+        return this.prisma.subtemas.findMany({
+            where: { tema_id: temaId },
+        });
+    }
+    findByName({ nome }: Pick<temas, "nome">): Promise<temas | null> {
+        return this.prisma.temas.findUnique({
+            where: { nome },
+        });
     }
 
     async findAll() {
