@@ -37,7 +37,14 @@ export class PrismaReceitaSubtemaRepository implements ReceitaSubtemaRepository{
                     receita_id,
                     subtema_id
                 }
-             },
+            },
+            include: {
+                subtema: {
+                    include: {
+                        tema: true
+                    }
+                }
+            }
         });
     }
 
