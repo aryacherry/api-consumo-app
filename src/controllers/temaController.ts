@@ -2,7 +2,6 @@
 import Tema from '../models/Tema';
 import { Request, Response } from 'express';
 import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepository';
-import { PrismaTemaSubtemaRepository } from '../repositories/prisma/PrismaTemaSubtemaRepository';
 
 const temaController = {
     index: async (req: Request, res: Response): Promise<void> => {
@@ -60,9 +59,16 @@ const temaController = {
                 .eq('tema', tema);
 
             if (error) throw error; */
-            const temaSubtemaRepository = new PrismaTemaSubtemaRepository()
-            const subtemasData = await temaSubtemaRepository.getSubtemasByTema({
-                temaId: tema
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({
+                nome: tema
+            });
+            if (!temaExists) {
+                res.status(404).json({ error: "Tema não encontrado" });
+                return;
+            }
+            const subtemasData = await temaRepository.getSubtemasByTema({
+                temaId: temaExists.id
             });
             res.status(200).json(subtemasData);
         } catch (error) {
