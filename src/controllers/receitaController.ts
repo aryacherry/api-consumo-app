@@ -10,12 +10,6 @@ import { PrismaIngredienteRepository } from '../repositories/prisma/PrismaIngred
 
 class ReceitaController {
 
-    private user: PrismaUsuarioRepository = new PrismaUsuarioRepository();
-    private recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
-    private subtopic: PrismaSubtemaRepository = new PrismaSubtemaRepository();
-    private recipeSubtopic: PrismaReceitaSubtemaRepository = new PrismaReceitaSubtemaRepository();
-    private ingredient: PrismaIngredienteRepository = new PrismaIngredienteRepository();
-
     async create(req:Request, res:Response): Promise<void> {
         const imageUrls = [];
         const { email, titulo, conteudo, idUsuario, temaId, subtema, ingredientes } = req.body;
@@ -29,14 +23,20 @@ class ReceitaController {
                 .select('email')
                 .eq('email', req.body.idUsuario)
                 .single();*/
+            const user: PrismaUsuarioRepository = new PrismaUsuarioRepository();
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+            const subtopic: PrismaSubtemaRepository = new PrismaSubtemaRepository();
+            const recipeSubtopic: PrismaReceitaSubtemaRepository = new PrismaReceitaSubtemaRepository();
 
-            const usuario = await this.user.findByEmail(email);
+
+
+            const usuario = await user.findByEmail(email);
             
             if (!usuario) {
                 throw new Error('Usuário não encontrado');
             }
 
-            const novaReceita = await this.recipe.create({
+            const novaReceita = await recipe.create({
                 titulo,
                 conteudo,
                 is_verify: false,
@@ -154,11 +154,10 @@ class ReceitaController {
                 }
             });
             */
-        
-                let subtemaEntity = await this.subtopic.findByDescription(sub);
+                let subtemaEntity = await subtopic.findByDescription(sub);
 
                 if (!subtemaEntity) {
-                    subtemaEntity = await this.subtopic.create({
+                    subtemaEntity = await subtopic.create({
                         descricao: sub,
                         tema_id: temaId,
                         nome: subtema
@@ -169,7 +168,7 @@ class ReceitaController {
                     }
                 }
 
-                const receitaSubtema = await this.recipeSubtopic.create({
+                const receitaSubtema = await recipeSubtopic.create({
                     receita_id: novaReceita.id,
                     subtema_id: subtemaEntity.id,
                     assunto: subtemaEntity.descricao
@@ -271,8 +270,8 @@ class ReceitaController {
 
              res.json(receitasComDetalhes);
              return;*/
-
-            const receitasComDetalhes = await this.recipe.getAllDetails();
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+            const receitasComDetalhes = await recipe.getAllDetails();
             
             const receitasFormatadas = receitasComDetalhes.map((receita) => {
                 const subtemas = receita.receitas_subtemas
@@ -290,11 +289,16 @@ class ReceitaController {
                     ultimaAlteracao: receita.data_alteracao,
                     tema: null,
                     subtemas: Array.from(new Set(subtemas)),
-                    fotos: receita.image_source ? [receita.image_source] : []
                 };
             });
            
-            res.json(receitasFormatadas);
+            //res.json(receitasFormatadas);
+            
+            // Para verificar se existe algo no banco de dados
+            res.json({
+                quantidade: receitasComDetalhes.length,
+                dadosCru: receitasComDetalhes,  
+            });
         } catch (e) {
             if (e instanceof Error) {
              handleError(res, e.message);
@@ -304,6 +308,9 @@ class ReceitaController {
     }
 
     async getById(req:Request, res:Response): Promise<void> {
+
+        const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+        
         try {
             /*const { data: receita, error: receitaError } = await supabase
                 .from('receitas')
@@ -347,7 +354,7 @@ class ReceitaController {
                 return;
             }
 
-            const receita = await this.recipe.findById(id);
+            const receita = await recipe.findById(id);
 
             if (!receita) {
                 handleError(res, 'Receita não encontrada', 404);
@@ -561,6 +568,10 @@ class ReceitaController {
                 data: { ...receitaAtualizada, fotos: imageUrls }
             });
             return;*/
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+            const recipeSubtopic: PrismaReceitaSubtemaRepository = new PrismaReceitaSubtemaRepository();
+            const ingredient: PrismaIngredienteRepository = new PrismaIngredienteRepository();
+
 
             if (!req.body.titulo && !req.body.conteudo && !req.files?.length) {
                     handleError(res, 'Nenhum dado para atualizar foi fornecido', 400);
@@ -569,14 +580,14 @@ class ReceitaController {
 
             const { idReceita, idReceitaSubtema } = req.params;
 
-            const receita = await this.recipe.findById(idReceita);
+            const receita = await recipe.findById(idReceita);
 
             if (!receita) {
                 handleError(res, 'Receita não encontrada', 404);
                 return;
             }
 
-            const correlacao = await this.recipeSubtopic.findById(idReceita, idReceitaSubtema);
+            const correlacao = await recipeSubtopic.findById(idReceita, idReceitaSubtema);
 
             const temaAtualizado = correlacao?.subtema_id || req.body; // Depois, ver se está funcionando
 
@@ -585,20 +596,20 @@ class ReceitaController {
             }
 
             if (req.body.subtema && Array.isArray(req.body.subtema)) {
-                await this.recipeSubtopic.delete(idReceita, idReceitaSubtema);
+                await recipeSubtopic.delete(idReceita, idReceitaSubtema);
 
                 for(const subtemaDescricao of req.body.subtema){
-                    let subtema = await this.recipeSubtopic.findById(idReceita, idReceitaSubtema);
+                    let subtema = await recipeSubtopic.findById(idReceita, idReceitaSubtema);
 
                     if (!subtema) {
-                        subtema = await this.recipeSubtopic.create({
+                        subtema = await recipeSubtopic.create({
                             receita_id: receita.id,
                             subtema_id: subtemaDescricao.id,
                             assunto: subtemaDescricao.descricao
                         });
                     }
 
-                    await this.recipeSubtopic.create({
+                    await recipeSubtopic.create({
                             receita_id: receita.id,
                             subtema_id: subtemaDescricao.id,
                             assunto: subtemaDescricao.descricao
@@ -607,7 +618,7 @@ class ReceitaController {
             }
 
             if (req.body.ingredientes && Array.isArray(req.body.ingredientes)) {
-                await this.ingredient.delete(receita.id);
+                await ingredient.delete(receita.id);
 
                 for(const ingredienteData of req.body.ingredientes){
                     const ingredienteObj = new Ingrendiente(ingredienteData);
@@ -621,7 +632,7 @@ class ReceitaController {
                 }
             }
 
-            const receitaAtualizada = await this.recipe.update(
+            const receitaAtualizada = await recipe.update(
                 receita.id,
                 {
                     titulo: req.body.titulo || receita.titulo,
@@ -716,16 +727,17 @@ class ReceitaController {
                 message: 'Receita e fotos deletadas com sucesso'
             });
             return;*/
-        
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+
             const { id } = req.params;
 
-            const receita = await this.recipe.findById(id);
+            const receita = await recipe.findById(id);
 
             if (!receita) {
                 return handleError(res, 'Receita não encontrada', 404);
             }
 
-            const fotos = await this.recipe.delete(id);
+            const fotos = await recipe.delete(id);
 
             res.json({
                 message: 'Receita deletada com sucesso',
@@ -785,7 +797,8 @@ class ReceitaController {
                 data: receita
             });
             return;*/
-
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+            const user: PrismaUsuarioRepository = new PrismaUsuarioRepository();
             const { verifyBy } = req.params;
             const { id, email } = req.params;
 
@@ -793,17 +806,17 @@ class ReceitaController {
                 return handleError(res, `O campo 'verifyBy' é obrigatório.`, 400, 'Input inválido');
             }
 
-            const user = await this.user.findByEmail({ email });
+            const users = await user.findByEmail({ email });
 
-            if (!user) {
+            if (!users) {
                 return handleError(res, `O usuário com o email ${verifyBy} não foi encontrado.`, 404, 'Usuário não encontrado');
             }
 
-            if (!user.is_monitor) {
+            if (!users.is_monitor) {
                 return handleError(res, `O usuário com o email ${verifyBy} não é um monitor.`, 400, 'Usuário não é monitor');
             }
 
-            const receitaAtualizada = await this.recipe.update(
+            const receitaAtualizada = await recipe.update(
                 id,
                 {
                     is_verify: true,
@@ -876,12 +889,13 @@ class ReceitaController {
              return;*/
 
             const { tema } = req.params;
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
 
             if (!TEMAS_VALIDOS.includes(tema)) {
                 return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}`, 400,'Input inválido');
             }
 
-            const receitas = await this.recipe.findAllVerifiedByTheme(tema);
+            const receitas = await recipe.findAllVerifiedByTheme(tema);
 
             if (!receitas.length) {
                 return handleError(res, 'Nenhuma receita encontrada', 404);
@@ -962,12 +976,13 @@ class ReceitaController {
              */
 
             const { tema } = req.params;
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
 
             if (!TEMAS_VALIDOS.includes(tema)) {
                 return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}`, 400,'Input inválido');
             }
 
-            const receitas = await this.recipe.findAllNotVerifiedByTheme(tema);
+            const receitas = await recipe.findAllNotVerifiedByTheme(tema);
             
             if (!receitas.length) {
                 return handleError(res, 'Nenhuma receita encontrada', 404);
@@ -1049,6 +1064,7 @@ class ReceitaController {
              return;*/
 
              const { tema } = req.params;
+             const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
 
             if (!TEMAS_VALIDOS.includes(tema)) {
                 return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`,
@@ -1056,7 +1072,7 @@ class ReceitaController {
                 'Input inválido');    
             }
 
-            const receitas = await this.recipe.findAllByTheme(tema);
+            const receitas = await recipe.findAllByTheme(tema);
 
             const receitaComDetalhes = receitas.map((receita) => {
                 const subtemasSet = new Set(
@@ -1155,12 +1171,13 @@ class ReceitaController {
 
             const tema = req.params.tema;
             const subtema = req.params.subtema.split(',');
+            const recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
 
             if (!tema || !subtema.length) {
                 handleError(res, 'Tema e subtemas são obrigatórios', 400);
             }
 
-            const receitas = await this.recipe.getReceitasPorSubtemas(tema, subtema);
+            const receitas = await recipe.getReceitasPorSubtemas(tema, subtema);
 
             const formatadas = receitas.map((receita) => {
                 
