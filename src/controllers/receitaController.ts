@@ -2,53 +2,63 @@ import { supabase } from '../supabase/client';
 import { TEMAS_VALIDOS } from '../utils/temas_validos';
 import Ingrendiente from "../models/Ingrediente";
 import { Request, Response } from 'express';
-
-interface Correlacao {
-  subtema: string;
-  tema: string;
-}
+import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository';
+import { PrismaReceitaRepository } from '../repositories/prisma/PrismaReceitaRepository';
+import { PrismaSubtemaRepository } from '../repositories/prisma/PrismaSubtemaRepository';
+import { PrismaReceitaSubtemaRepository } from '../repositories/prisma/PrismaReceitaSubtemaRepository';
+import { PrismaIngredienteRepository } from '../repositories/prisma/PrismaIngredienteRepository';
 
 class ReceitaController {
 
+    private user: PrismaUsuarioRepository = new PrismaUsuarioRepository();
+    private recipe: PrismaReceitaRepository = new PrismaReceitaRepository();
+    private subtopic: PrismaSubtemaRepository = new PrismaSubtemaRepository();
+    private recipeSubtopic: PrismaReceitaSubtemaRepository = new PrismaReceitaSubtemaRepository();
+    private ingredient: PrismaIngredienteRepository = new PrismaIngredienteRepository();
+
     async create(req:Request, res:Response): Promise<void> {
         const imageUrls = [];
+        const { email, titulo, conteudo, idUsuario, temaId, subtema, ingredientes } = req.body;
         try {
-            if (!req.body.titulo || !req.body.conteudo || !req.body.idUsuario || !req.body.tema || !req.body.subtema) {
+            if (!req.body.titulo || !req.body.conteudo || !req.body.idUsuario || !req.body.temaId || !req.body.subtema) {
                 throw new Error('Campos obrigatórios: titulo, conteudo, idUsuario, tema, subtema');
             }
 
-            const { data: usuario, error: userError } = await supabase
+            /*const { data: usuario, error: userError } = await supabase
                 .from('usuarios')
                 .select('email')
                 .eq('email', req.body.idUsuario)
-                .single();
+                .single();*/
 
-            if (userError || !usuario) {
+            const usuario = await this.user.findByEmail(email);
+            
+            if (!usuario) {
                 throw new Error('Usuário não encontrado');
             }
 
-            const novaReceita = {
-                titulo: req.body.titulo,
-                conteudo: req.body.conteudo,
-                isVerify: false,
-                idUsuario: req.body.idUsuario,
-                dataCriacao: new Date().toISOString(),
-                ultimaAlteracao: new Date().toISOString()
-            };
+            const novaReceita = await this.recipe.create({
+                titulo,
+                conteudo,
+                is_verify: false,
+                usuario_id: idUsuario,
+                tema_id: temaId,
+                image_source: ''
+            });
 
-            const { data: receitaData, error: receitaError } = await supabase
+            /*const { data: receitaData, error: receitaError } = await supabase
                 .from('receitas')
                 .insert([novaReceita])
                 .select()
-                .single();
+                .single();*/
+            
+            
+            const subtemasArray = Array.isArray(req.body.subtema) ? req.body.subtema : [req.body.subtema];
 
-            if (receitaError) throw receitaError;
+            for (const sub of subtemasArray) {
+                
+                /*const { data: subtemaData, error: subtemaError } = await supabase
 
-            const tema = req.body.tema;
-            const subtemas = Array.isArray(req.body.subtema) ? req.body.subtema : [req.body.subtema];
 
-            for (const subtema of subtemas) {
-                const { data: subtemaData, error: subtemaError } = await supabase
                     .from('subTema')
                     .select('*')
                     .eq('descricao', subtema)
@@ -143,7 +153,82 @@ class ReceitaController {
                     fotos: imageUrls
                 }
             });
-            
+            */
+        
+                let subtemaEntity = await this.subtopic.findByDescription(sub);
+
+                if (!subtemaEntity) {
+                    subtemaEntity = await this.subtopic.create({
+                        descricao: sub,
+                        tema_id: temaId,
+                        nome: subtema
+                    });
+
+                    if (!subtemaEntity) {
+                        throw new Error('Erro ao criar o subtema');
+                    }
+                }
+
+                const receitaSubtema = await this.recipeSubtopic.create({
+                    receita_id: novaReceita.id,
+                    subtema_id: subtemaEntity.id,
+                    assunto: subtemaEntity.descricao
+                });
+                
+                if (!receitaSubtema) {
+                    throw new Error('Erro ao criar o subtema da receita');
+                }
+            }
+
+            if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+                for(const ingrediente of ingredientes){
+                    const ingredienteObj = new Ingrendiente(ingrediente);
+                    const { valid, errors = [] } = ingredienteObj.validate();
+
+                    if (!valid) {
+                        throw new Error(errors.join(', '));
+                    }
+
+                    await ingredienteObj.save(novaReceita.id)
+                }
+            }
+
+            if (Array.isArray(req.files) && req.files.length > 0) {
+                for (const file of req.files) {
+                    const fileName = `${novaReceita.id}-${Date.now()}-${file.originalname}`;
+                    const { error: uploadError } = await supabase.storage
+                        .from('fotosReceitas')
+                        .upload(fileName, file.buffer, {
+                            contentType: file.mimetype
+                        });
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('fotosReceitas')
+                        .getPublicUrl(fileName);
+
+                    const { error: fotoError } = await supabase
+                        .from('fotosReceitas')
+                        .insert({
+                            idFoto: Date.now(),
+                            id: novaReceita.id,
+                            url: publicUrl,
+                            createdAt: new Date().toISOString()
+                        });
+
+                    if (fotoError) throw fotoError;
+                    imageUrls.push(publicUrl);
+                }
+            }
+
+            res.status(201).json({
+                message: 'Receita criada com sucesso',
+                data: {
+                    ...novaReceita,
+                    fotos: imageUrls
+                }
+            });
         } catch (e) {
             console.log(e)
             if (e instanceof Error) {
@@ -155,7 +240,7 @@ class ReceitaController {
 
     async getAll(req:Request, res:Response): Promise<void> {
         try {
-            const { data: receitas, error: receitasError } = await supabase
+            /*const { data: receitas, error: receitasError } = await supabase
                 .from('receitas')
                 .select('*, correlacaoReceitas(tema, subtema), fotosReceitas(url)')
                 .order('dataCriacao', { ascending: false });
@@ -185,7 +270,31 @@ class ReceitaController {
             }));
 
              res.json(receitasComDetalhes);
-             return;
+             return;*/
+
+            const receitasComDetalhes = await this.recipe.getAllDetails();
+            
+            const receitasFormatadas = receitasComDetalhes.map((receita) => {
+                const subtemas = receita.receitas_subtemas
+                .filter((relacao: any) => relacao.subtema?.nome)
+                .map((relacao: any) => relacao.subtema.nome);
+
+                return {
+                    id: receita.id,
+                    titulo: receita.titulo,
+                    conteudo: receita.conteudo,
+                    isVerify: receita.is_verify,
+                    idUsuario: receita.usuario_id,
+                    verifyBy: receita.verify_by,
+                    dataCriacao: receita.data_criacao,
+                    ultimaAlteracao: receita.data_alteracao,
+                    tema: null,
+                    subtemas: Array.from(new Set(subtemas)),
+                    fotos: receita.image_source ? [receita.image_source] : []
+                };
+            });
+           
+            res.json(receitasFormatadas);
         } catch (e) {
             if (e instanceof Error) {
              handleError(res, e.message);
@@ -196,7 +305,7 @@ class ReceitaController {
 
     async getById(req:Request, res:Response): Promise<void> {
         try {
-            const { data: receita, error: receitaError } = await supabase
+            /*const { data: receita, error: receitaError } = await supabase
                 .from('receitas')
                 .select(`
                 *,
@@ -206,7 +315,7 @@ class ReceitaController {
             `)
                 .eq('id', req.params.id)
                 .single();
-
+            
             if (!receita) handleError(res, 'Receita não encontrada', 404);
             if (receitaError) throw receitaError;
                     
@@ -229,7 +338,42 @@ class ReceitaController {
                 ingredientes,
                 fotos
             });
-            return;
+            return;*/
+
+            const id = req.params.body;
+
+            if (!id) {
+                handleError(res, 'ID da receita é obrigatório', 400);
+                return;
+            }
+
+            const receita = await this.recipe.findById(id);
+
+            if (!receita) {
+                handleError(res, 'Receita não encontrada', 404);
+                return;
+            }
+
+            const tema = receita.tema?.nome || null;
+            const subtemas = receita.receitas_subtemas.map((rel: { subtema: { nome: string } }) => rel.subtema.nome);
+            const ingredientes = receita.ingredientes;
+
+            res.json({
+                id: receita.id,
+                titulo: receita.titulo,
+                conteudo: receita.conteudo,
+                isVerify: receita.is_verify,
+                usuarioId: receita.usuario_id,
+                usuarioNome: receita.usuario?.nome || null,
+                verifyBy: receita.verify_by,
+                verificadoPor: receita.verify_by_user?.nome || null,
+                dataCriacao: receita.data_criacao,
+                ultimaAlteracao: receita.data_alteracao,
+                tema,
+                subtemas: Array.from(new Set(subtemas)),
+                ingredientes,
+                imagem: receita.image_source
+            });            
         } catch (e) {
             if (e instanceof Error) {
              handleError(res, e.message);
@@ -239,9 +383,9 @@ class ReceitaController {
     }
 
     async update(req:Request, res:Response): Promise<void> {
-        let imageUrls = [];
+        let imageUrls: string[] = [];
         try {
-            if (!req.body.titulo && !req.body.conteudo && !req.files?.length) {
+            /*if (!req.body.titulo && !req.body.conteudo && !req.files?.length) {
                  handleError(res, 'Nenhum dado para atualizar foi fornecido', 400);
                  return;
             }
@@ -416,7 +560,83 @@ class ReceitaController {
                 message: 'Receita atualizada com sucesso',
                 data: { ...receitaAtualizada, fotos: imageUrls }
             });
-            return;
+            return;*/
+
+            if (!req.body.titulo && !req.body.conteudo && !req.files?.length) {
+                    handleError(res, 'Nenhum dado para atualizar foi fornecido', 400);
+                    return;
+            }
+
+            const { idReceita, idReceitaSubtema } = req.params;
+
+            const receita = await this.recipe.findById(idReceita);
+
+            if (!receita) {
+                handleError(res, 'Receita não encontrada', 404);
+                return;
+            }
+
+            const correlacao = await this.recipeSubtopic.findById(idReceita, idReceitaSubtema);
+
+            const temaAtualizado = correlacao?.subtema_id || req.body; // Depois, ver se está funcionando
+
+            if (!temaAtualizado) {
+                throw new Error('Nenhum tema disponível para a receita');
+            }
+
+            if (req.body.subtema && Array.isArray(req.body.subtema)) {
+                await this.recipeSubtopic.delete(idReceita, idReceitaSubtema);
+
+                for(const subtemaDescricao of req.body.subtema){
+                    let subtema = await this.recipeSubtopic.findById(idReceita, idReceitaSubtema);
+
+                    if (!subtema) {
+                        subtema = await this.recipeSubtopic.create({
+                            receita_id: receita.id,
+                            subtema_id: subtemaDescricao.id,
+                            assunto: subtemaDescricao.descricao
+                        });
+                    }
+
+                    await this.recipeSubtopic.create({
+                            receita_id: receita.id,
+                            subtema_id: subtemaDescricao.id,
+                            assunto: subtemaDescricao.descricao
+                        });
+                }
+            }
+
+            if (req.body.ingredientes && Array.isArray(req.body.ingredientes)) {
+                await this.ingredient.delete(receita.id);
+
+                for(const ingredienteData of req.body.ingredientes){
+                    const ingredienteObj = new Ingrendiente(ingredienteData);
+                    const { valid, errors = [] } = ingredienteObj.validate();
+
+                    if (!valid) {
+                        throw new Error(errors.join(', '));
+                    }
+
+                    await ingredienteObj.save(receita.id);
+                }
+            }
+
+            const receitaAtualizada = await this.recipe.update(
+                receita.id,
+                {
+                    titulo: req.body.titulo || receita.titulo,
+                    conteudo: req.body.conteudo || receita.conteudo,
+                    data_alteracao: new Date()
+                }
+            );
+
+            res.json({
+                message: 'Receita atualizada com sucesso',
+                data: {
+                    ...receitaAtualizada,
+                    fotos: imageUrls
+                }
+            });
 
         } catch (e) {
             if (imageUrls.length > 0) {
@@ -438,7 +658,7 @@ class ReceitaController {
 
     async delete(req:Request, res:Response): Promise<void> {
         try {
-            const { data: receita, error: findError } = await supabase
+            /*const { data: receita, error: findError } = await supabase
                 .from('receitas')
                 .select('*')
                 .eq('id', req.params.id)
@@ -495,8 +715,21 @@ class ReceitaController {
              res.json({
                 message: 'Receita e fotos deletadas com sucesso'
             });
-            return;
+            return;*/
         
+            const { id } = req.params;
+
+            const receita = await this.recipe.findById(id);
+
+            if (!receita) {
+                return handleError(res, 'Receita não encontrada', 404);
+            }
+
+            const fotos = await this.recipe.delete(id);
+
+            res.json({
+                message: 'Receita deletada com sucesso',
+            });
 
         } catch (e) {
             console.error('Erro completo:', e);
@@ -509,7 +742,7 @@ class ReceitaController {
 
     async verify(req:Request, res:Response): Promise<void> {
         try {
-            const verifyBy = req.body.verifyBy;
+            /*const verifyBy = req.body.verifyBy;
             const id = req.params.id;
 
             if (!verifyBy) {
@@ -551,7 +784,42 @@ class ReceitaController {
                 message: 'Receita verificada com sucesso',
                 data: receita
             });
-            return;
+            return;*/
+
+            const { verifyBy } = req.params;
+            const { id, email } = req.params;
+
+            if (!verifyBy) {
+                return handleError(res, `O campo 'verifyBy' é obrigatório.`, 400, 'Input inválido');
+            }
+
+            const user = await this.user.findByEmail({ email });
+
+            if (!user) {
+                return handleError(res, `O usuário com o email ${verifyBy} não foi encontrado.`, 404, 'Usuário não encontrado');
+            }
+
+            if (!user.is_monitor) {
+                return handleError(res, `O usuário com o email ${verifyBy} não é um monitor.`, 400, 'Usuário não é monitor');
+            }
+
+            const receitaAtualizada = await this.recipe.update(
+                id,
+                {
+                    is_verify: true,
+                    verify_by: verifyBy,
+                    data_alteracao: new Date()
+                }
+            );
+
+            if (!receitaAtualizada) {
+                return handleError(res, 'Receita não encontrada', 404);
+            }
+
+            res.json({
+                message: 'Receita verificada com sucesso',
+                data: receitaAtualizada
+            });
         } catch (e) {
             if (e instanceof Error) {
             handleError(res, e.message);
@@ -562,7 +830,7 @@ class ReceitaController {
 
     async getAllVerifiedByTheme(req:Request, res:Response): Promise<void> {
         try {
-            const { tema } = req.params;
+            /*const { tema } = req.params;
             if (!TEMAS_VALIDOS.includes(tema)) {
                  handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
                 return;
@@ -605,7 +873,40 @@ class ReceitaController {
             }));
 
              res.json(receitasComDetalhes);
-             return;
+             return;*/
+
+            const { tema } = req.params;
+
+            if (!TEMAS_VALIDOS.includes(tema)) {
+                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}`, 400,'Input inválido');
+            }
+
+            const receitas = await this.recipe.findAllVerifiedByTheme(tema);
+
+            if (!receitas.length) {
+                return handleError(res, 'Nenhuma receita encontrada', 404);
+            }
+
+            const receitaComDetalhes = receitas.map(receita => {
+                // Depois, analisar para ver se está tudo certo
+                const subtemasSet = new Set(
+                    receita.receitas_subtemas.map(rel => rel.subtema_id)
+                )
+
+                return {
+                    id: receita.id,
+                    titulo: receita.titulo,
+                    conteudo: receita.conteudo,
+                    isVerify: receita.is_verify,
+                    idUsuario: receita.usuario_id,
+                    verifyBy: receita.verify_by,
+                    dataCriacao: receita.data_criacao,
+                    ultimaAlteracao: receita.data_alteracao,
+                    tema: tema,
+                    subtemas: Array.from(subtemasSet),
+                    fotos: receita.image_source ? [receita.image_source] : []
+                }
+            });
         } catch (e) {
             if (e instanceof Error) {
              handleError(res, e.message);
@@ -616,7 +917,7 @@ class ReceitaController {
 
     async getAllNotVerifiedByTheme(req:Request, res:Response): Promise<void> {
         try {
-            const { tema } = req.params;
+            /*const { tema } = req.params;
             if (!TEMAS_VALIDOS.includes(tema)) {
                 return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
             }
@@ -658,6 +959,43 @@ class ReceitaController {
 
              res.json(receitasComDetalhes);
              return;
+             */
+
+            const { tema } = req.params;
+
+            if (!TEMAS_VALIDOS.includes(tema)) {
+                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}`, 400,'Input inválido');
+            }
+
+            const receitas = await this.recipe.findAllNotVerifiedByTheme(tema);
+            
+            if (!receitas.length) {
+                return handleError(res, 'Nenhuma receita encontrada', 404);
+            }
+
+            const receitaComDetalhes = receitas.map((receita) => {
+
+                // Depois, analisar para ver se isso está funcionando
+                const subtemasSet = new Set(
+                    receita.receitas_subtemas.map(rel => rel.subtema_id)
+                )
+
+                return {
+                    id: receita.id,
+                    titulo: receita.titulo,
+                    conteudo: receita.conteudo,
+                    isVerify: receita.is_verify,
+                    idUsuario: receita.usuario_id,
+                    verifyBy: receita.verify_by,
+                    dataCriacao: receita.data_criacao,
+                    ultimaAlteracao: receita.data_alteracao,
+                    tema: tema,
+                    subtemas: Array.from(subtemasSet),
+                    fotos: receita.image_source ? [receita.image_source] : []
+                }
+            });
+
+            res.json(receitaComDetalhes)
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -667,7 +1005,7 @@ class ReceitaController {
     
     async getAllByTheme(req:Request, res:Response): Promise<void> {
         try {
-            const { tema } = req.params;
+            /*const { tema } = req.params;
             if (!TEMAS_VALIDOS.includes(tema)) {
                 return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
             }
@@ -708,7 +1046,39 @@ class ReceitaController {
             }));
 
              res.json(receitasComDetalhes);
-             return;
+             return;*/
+
+             const { tema } = req.params;
+
+            if (!TEMAS_VALIDOS.includes(tema)) {
+                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`,
+                400,
+                'Input inválido');    
+            }
+
+            const receitas = await this.recipe.findAllByTheme(tema);
+
+            const receitaComDetalhes = receitas.map((receita) => {
+                const subtemasSet = new Set(
+                    receita.receitas_subtemas.map(rel => rel.subtema_id)
+                );
+
+                return {
+                    id: receita.id,
+                    titulo: receita.titulo,
+                    conteudo: receita.conteudo,
+                    isVerify: receita.is_verify,
+                    idUsuario: receita.usuario_id,
+                    verifyBy: receita.verify_by,
+                    dataCriacao: receita.data_criacao,
+                    ultimaAlteracao: receita.data_alteracao,
+                    tema: tema,
+                    subtemas: Array.from(subtemasSet),
+                    fotos: receita.image_source ? [receita.image_source] : []
+                };
+            });
+
+            res.json(receitaComDetalhes);
         } catch (e) {
             if (e instanceof Error) {
             return handleError(res, e.message);
@@ -718,7 +1088,7 @@ class ReceitaController {
 
     async getReceitasPorSubtemas(req:Request, res:Response): Promise<void> {
         try {
-            const tema = req.params.tema;
+            /*const tema = req.params.tema;
             const subtemas = req.params.subtema.split(',');
 
             const subtemasQuery = subtemas.map(subtema => `subtema.eq.${subtema}`).join(',');
@@ -781,7 +1151,39 @@ class ReceitaController {
             }));
 
             res.json(receitasComDetalhes);
-            return;
+            return;*/
+
+            const tema = req.params.tema;
+            const subtema = req.params.subtema.split(',');
+
+            if (!tema || !subtema.length) {
+                handleError(res, 'Tema e subtemas são obrigatórios', 400);
+            }
+
+            const receitas = await this.recipe.getReceitasPorSubtemas(tema, subtema);
+
+            const formatadas = receitas.map((receita) => {
+                
+                // Depois, analisar para ver se está tudo certo
+                const subtemasSet = new Set(
+                    receita.receitas_subtemas.map((rel) => rel.subtema_id)
+                );
+
+                return {
+                id: receita.id,
+                titulo: receita.titulo,
+                conteudo: receita.conteudo,
+                isVerify: receita.is_verify,
+                idUsuario: receita.usuario_id,
+                verifyBy: receita.verify_by,
+                dataCriacao: receita.data_criacao,
+                ultimaAlteracao: receita.data_alteracao,
+                subtemas: Array.from(subtemasSet),
+                fotos: receita.image_source ? [receita.image_source] : []
+            }
+            });
+
+            
         }
         catch (e) {
             console.error('Erro ao buscar receitas por subtemas:', e);
