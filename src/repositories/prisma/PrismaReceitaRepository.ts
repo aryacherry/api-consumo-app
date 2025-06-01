@@ -9,6 +9,27 @@ export class PrismaReceitaRepository implements ReceitaRepository{
         this.prisma = new PrismaClient();
     }
 
+    // Formata o resultado
+    async getAllDetails(): Promise<any[]> {
+        // Busca todas as receitas no banco, ordenadas por data de criação (mais recentes primeiro)
+        return await this.prisma.receitas.findMany({
+            orderBy: {
+                data_criacao: 'desc'
+            },
+            include: {
+                // Inclui o relacionamento com o tema principal da receita
+                tema: true,
+                // Inclui os subtemas relacionados, e dentro de cada relação inclui o subtema propriamente dito
+                receitas_subtemas: {
+                    include: {
+                        subtema: true
+                    }
+                }
+            }
+        });
+        
+    }
+
     async create(receita: Prisma.receitasUncheckedCreateInput): Promise<receitas> {
        
         return this.prisma.receitas.create({data: receita});
@@ -27,13 +48,24 @@ export class PrismaReceitaRepository implements ReceitaRepository{
         await this.prisma.receitas.delete({where: {id}});
     }
 
-    async findById(id: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[]; ingredientes: ingredientes[]; }) | null> {
+    async findById(id: string): Promise<any> {
         
         return this.prisma.receitas.findUnique({
             where: { id },
             include: {
-                receitas_subtemas: true,
-                ingredientes: true
+                tema: true,
+                usuario: true,
+                verify_by_user: true,
+                ingredientes: true,
+                receitas_subtemas: {
+                    include: {
+                        subtema: {
+                            include: {
+                            tema: true
+                            }
+                        }
+                    }
+                }
             }
         });
     }
