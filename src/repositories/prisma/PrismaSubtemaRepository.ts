@@ -8,6 +8,14 @@ export class PrismaSubtemaRepository implements SubtemaRepository{
         this.prisma = new PrismaClient();
     }
 
+    async findByDescription(descricao: string): Promise<subtemas | null> {
+        return await this.prisma.subtemas.findFirst({
+            where: { 
+                descricao,
+             }
+        });
+    }
+
     async create(subtema: Prisma.subtemasUncheckedCreateInput): Promise<subtemas> {
         return await this.prisma.subtemas.create({
             data: subtema,
