@@ -6,4 +6,5 @@ export interface SubtemaRepository {
     findAll(): Promise<subtemas[]>;
     update(id: string, subtema: Prisma.subtemasUncheckedUpdateInput): Promise<subtemas | null>;
     delete(id: string): Promise<void>;
+    findByDescription(descricao: string): Promise<subtemas | null>
 }
