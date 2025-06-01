@@ -9,6 +9,7 @@ export interface ReceitaRepository {
     findAllByTheme(tema: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
     findAllVerifiedByTheme(tema: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
     findAllNotVerifiedByTheme(tema: string): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
-    getReceitasPorSubtemas(tema: string, subtemas: string[]): Promise<(receitas & { receitas_subtemas: receitas_subtemas[], ingredientes: ingredientes[] })[]>;
+    getReceitasPorSubtemas(tema: string, subtemas: string[]): Promise<any>;
     verify(id: string, verifyBy: string): Promise<receitas>;
+    getAllDetails(): Promise<any[]>; // Formata o resultado
 }
