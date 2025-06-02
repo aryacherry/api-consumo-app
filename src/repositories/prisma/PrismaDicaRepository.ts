@@ -42,6 +42,7 @@ export class PrismaDicaRepository implements DicaRepository {
     }
     async create({
         usuario_id,
+        tema_id,
         verify_by,
         titulo,
         conteudo,
@@ -53,6 +54,7 @@ export class PrismaDicaRepository implements DicaRepository {
         return this.prisma.dicas.create({
             data: {
                 usuario_id,
+                tema_id,
                 verify_by,
                 titulo,
                 conteudo,
