@@ -12,7 +12,7 @@ class UserController {
 
     private userPrismaRepository = new PrismaUsuarioRepository();
 
-    async store(req:Request, res:Response): Promise<void>{
+    store = async (req:Request, res:Response): Promise<void> => {
         let uploadedImagePath = null;
         try {
             const user = new User({
@@ -287,7 +287,7 @@ class UserController {
         }
     }
 
-    async loginUser(req:Request, res:Response): Promise<void> {
+    loginUser = async (req:Request, res:Response): Promise<void> => {
         const { email, senha } = req.body;
     
         try {
