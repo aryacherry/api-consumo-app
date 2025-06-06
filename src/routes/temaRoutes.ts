@@ -111,6 +111,8 @@ router.get('/tema/:id', authMiddleware, temaController.checkIfExists);
  *         description: Tema não encontrado
  *       500:
  *         description: Erro interno do servidor
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.delete('/tema/:id', authMiddleware, temaController.delete);
 
