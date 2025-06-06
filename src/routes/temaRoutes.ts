@@ -32,6 +32,19 @@ const router: Router = Router();
  *                 #     type: integer
  *                 #   descricao:
  *                 #     type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 # TODO: Defina aqui as propriedades de um Tema
+ *                 # Exemplo:
+ *                 # properties:
+ *                 #   id:
+ *                 #     type: integer
+ *                 #   descricao:
+ *                 #     type: string
  *       401:
  *         description: Não autorizado
  *       500:
