@@ -57,6 +57,8 @@ router.get('/tema', authMiddleware, temaController.index);
  *         description: Tema encontrado
  *       404:
  *         description: Tema não encontrado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/tema/:id', authMiddleware, temaController.checkIfExists);
 
