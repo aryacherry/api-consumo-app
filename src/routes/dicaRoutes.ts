@@ -295,6 +295,19 @@ router.get('/dicas/:tema/:subtema', dicaController.getDica);
  *     responses:
  *       200:
  *         description: Lista de dicas de especialistas por tema
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 # TODO: Defina aqui as propriedades de uma Dica
+ *                 # Exemplo:
+ *                 # properties:
+ *                 #   id: 
+ *                 #     type: integer
+ *                 #   titulo:
+ *                 #     type: string
  *       400:
  *         description: Erro ao listar dicas de especialistas
  *       500:
