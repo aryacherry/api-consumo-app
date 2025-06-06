@@ -119,6 +119,8 @@ router.delete('/tema/:id', authMiddleware, temaController.delete);
  *         description: Lista de subtemas
  *       404:
  *         description: Tema não encontrado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/tema/:tema/subtemas', authMiddleware, temaController.getSubtemasByTema);
 
