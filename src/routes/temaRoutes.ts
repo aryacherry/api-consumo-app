@@ -55,8 +55,24 @@ router.get('/tema', authMiddleware, temaController.index);
  *     responses:
  *       200:
  *         description: Tema encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   example: true
  *       404:
  *         description: Tema não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   example: false
  *       500:
  *         description: Erro interno do servidor
  */
