@@ -92,7 +92,7 @@ router.get('/tema/:id', authMiddleware, temaController.checkIfExists);
  *           type: string
  *         description: ID do tema
  *     responses:
- *       200:
+ *       204:
  *         description: Tema deletado
  *       404:
  *         description: Tema não encontrado
