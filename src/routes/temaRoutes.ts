@@ -117,6 +117,16 @@ router.delete('/tema/:id', authMiddleware, temaController.delete);
  *     responses:
  *       200:
  *         description: Lista de subtemas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   subtema:
+ *                     type: string
+ *                     example: "NomeDoSubtema"
  *       404:
  *         description: Tema não encontrado
  *       500:
