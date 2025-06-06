@@ -21,6 +21,8 @@ const router: Router = Router();
  *         description: Lista de temas
  *       401:
  *         description: Não autorizado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/tema', authMiddleware, temaController.index);
 
