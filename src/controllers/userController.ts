@@ -293,7 +293,7 @@ class UserController {
         const { email, senha } = req.body;
     
         try {
-            console.log("Iniciando login para o email:", email);
+            //console.log("Iniciando login para o email:", email);
     
             /*const { data: user, error } = await supabase
                 .from('usuarios')
@@ -418,7 +418,7 @@ class UserController {
                 return;
             }
 
-            console.log('chegou aq2');
+            //console.log('chegou aq2');
 
             const token = jwt.sign(
                 { email: user.email },
