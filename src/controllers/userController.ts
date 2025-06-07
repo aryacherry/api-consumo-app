@@ -8,11 +8,10 @@ import type { Request, Response } from 'express';
 import { error } from 'console';
 import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository';
 
-class UserController {
+    const userPrismaRepository = new PrismaUsuarioRepository();
 
-    async store(req:Request, res:Response): Promise<void> {
+    export async function storeUser(req:Request, res:Response): Promise<void> {
         let uploadedImagePath = null;
-        const userPrismaRepository = new PrismaUsuarioRepository();
         try {
             const user = new User({
                 email: req.body.email,
@@ -78,7 +77,7 @@ class UserController {
     }
 
     //funcionando pos alteracao bd
-    async index(req:Request, res:Response): Promise<void> {
+    export async function indexUser(req:Request, res:Response): Promise<void> {
         try {
             /*const { data: users, error } = await supabase
                 .from('usuarios')
@@ -89,7 +88,6 @@ class UserController {
              res.json(users);
              return;*/
 
-             const userPrismaRepository = new PrismaUsuarioRepository();
              const users = await userPrismaRepository.findAll();
 
              const sanitizedUsers = users.map(user =>({
@@ -110,7 +108,7 @@ class UserController {
         }
     }
     //funcionando pos alteracao bd
-    async show(req:Request, res:Response): Promise<void> {
+    export async function showUser(req:Request, res:Response): Promise<void> {
         try {
             /*const { data: user, error } = await supabase
                 .from('usuarios')
@@ -125,7 +123,6 @@ class UserController {
 
              res.json(user);
              return;*/
-              const userPrismaRepository = new PrismaUsuarioRepository();
               const user = await userPrismaRepository.findByEmail({ email: req.params.email });
 
                 if (!user) {
@@ -150,7 +147,7 @@ class UserController {
         }
     }
     //Funcionando pos alteracao
-    async update(req:Request, res:Response): Promise<void> {
+    export async function updateUser(req:Request, res:Response): Promise<void> {
 
         let uploadedImagePath = null;
 
@@ -200,7 +197,6 @@ class UserController {
             return;*/
             const userEmail = req.params.email;
 
-            const userPrismaRepository = new PrismaUsuarioRepository();
             const user = await userPrismaRepository.findByEmail({ email: userEmail });
 
             if (!user) {
@@ -247,7 +243,7 @@ class UserController {
     }
         
     // Funcionando pos alteracao
-    async delete(req:Request, res:Response): Promise<void> {
+    export async function deleteUser(req:Request, res:Response): Promise<void> {
         try {
             /*const { data: user, error: fetchError } = await supabase
                 .from('usuarios')
@@ -269,7 +265,6 @@ class UserController {
 
              res.json({ message: 'Usuário deletado com sucesso' });
              return;*/
-             const userPrismaRepository = new PrismaUsuarioRepository();
              const user = await userPrismaRepository.findByEmail({email: req.params.email});
 
              if(!user){
@@ -289,7 +284,7 @@ class UserController {
         }
     }
 
-    async loginUser(req:Request, res:Response): Promise<void> {
+    export async function loginUser(req:Request, res:Response): Promise<void> {
         const { email, senha } = req.body;
     
         try {
@@ -333,7 +328,6 @@ class UserController {
     
              res.status(200).json({ message: 'Login bem-sucedido', token });
              return;*/
-             const userPrismaRepository = new PrismaUsuarioRepository();
              const user = await userPrismaRepository.findByEmail({email});
 
              if(!user){
@@ -368,7 +362,7 @@ class UserController {
         }
     }
     
-    async resetPasswordRequest(req:Request, res:Response): Promise<void> {
+    export async function resetPasswordRequestUser(req:Request, res:Response): Promise<void> {
         const { email } = req.body;
 
         try {
@@ -409,7 +403,6 @@ class UserController {
 
             res.status(200).json({ message: 'Token de redefinição de senha enviado com sucesso' });
             return;*/
-            const userPrismaRepository = new PrismaUsuarioRepository();
             const user = await userPrismaRepository.findByEmail({ email });
 
 
@@ -458,11 +451,10 @@ class UserController {
         }
     }
 
-    async resetPassword(req:Request, res:Response): Promise<void> {
+    export async function resetPasswordUser(req:Request, res:Response): Promise<void> {
     
         const { token } = req.params;
         const { newPassword } = req.body;
-        const userPrismaRepository = new PrismaUsuarioRepository();
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { email: string };
@@ -508,7 +500,6 @@ class UserController {
         }
     }
 
-}
     async function uploadImage(file: Express.Multer.File) { 
         try {
             const uniqueFileName = `${uuidv4()}-${file.originalname}`;
@@ -533,5 +524,3 @@ class UserController {
         }
 
     }
-
-export default new UserController();
