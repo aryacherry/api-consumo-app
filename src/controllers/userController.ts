@@ -412,7 +412,6 @@ class UserController {
             const userPrismaRepository = new PrismaUsuarioRepository();
             const user = await userPrismaRepository.findByEmail({ email });
 
-            console.log('chegou aq1');
 
             if (!user) {
                 res.status(400).json({ error: 'Usuário não encontrado' });
@@ -427,17 +426,18 @@ class UserController {
                 { expiresIn: '1h' }
             );
 
-            console.log('chegou aq3');
 
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS
                 }
             });
 
-            console.log('cheagaou aq4');
 
             const mailOptions = {
                 from: process.env.EMAIL_USER,
@@ -446,11 +446,9 @@ class UserController {
                 html: `<p>Seu token de redefinição de senha é:</p><p><strong>${token}</strong></p>`
             };
 
-            console.log('chegou aq5');
 
             await transporter.sendMail(mailOptions);
 
-            console.log('chegou aq6');
 
             res.status(200).json({ message: 'Token de redefinição de senha enviado com sucesso' });
         } catch (e) {
