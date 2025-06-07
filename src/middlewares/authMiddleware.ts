@@ -12,10 +12,17 @@ declare global {
 }
 
 const authMiddleware: RequestHandler = async(req: Request, res: Response, next: NextFunction)  =>{
-    let token = req.headers['authorization'];
-    if(!token) {
-        res.status(401).json({ message: 'Token não fornecido'});
-        return
+    let authHeader = req.headers['authorization'];
+    const parts = authHeader.split(' ');
+
+    if (parts.length !== 2) {
+        return res.status(401).json({error: 'Token mal formatado'});
+    }
+
+    const [scheme, token] = parts;
+
+    if (!/^Bearer$/i.test(scheme)) {
+        return res.status(401).json({error: 'Token mal formatado'});
     }
 
     try{    

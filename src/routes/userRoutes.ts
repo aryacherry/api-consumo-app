@@ -5,6 +5,7 @@ import authMiddleware from "../middlewares/authMiddleware";
  
 const router: Router = Router();
 
+
 /**
  * @swagger
  * /api/usuario:
