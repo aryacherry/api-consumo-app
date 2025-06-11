@@ -139,7 +139,7 @@ router.get('/tema/:tema/subtemas', authMiddleware, temaController.getSubtemasByT
  * /api/tema/{id}:
  *   get:
  *     summary: Lista um único tema
- *     tags: [Tema]
+ *     tags: [Temas]
  *     parameters:
  *       - name: id
  *         in: path
@@ -164,7 +164,7 @@ router.get('/tema/:id', authMiddleware, temaController.checkIfExists)
  * /api/tema/{id}:
  *   delete:
  *     summary: Deleta um tema pelo ID
- *     tags: [Tema]
+ *     tags: [Temas]
  *     parameters:
  *       - name: id
  *         in: path
@@ -191,7 +191,7 @@ router.delete('/tema/:id', authMiddleware, temaController.delete)
  * /api/tema/{tema}/subtemas:
  *   get:
  *     summary: Lista os subtemas de um tema específico
- *     tags: [Tema]
+ *     tags: [Temas]
  *     parameters:
  *       - name: tema
  *         in: path
