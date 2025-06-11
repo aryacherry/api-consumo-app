@@ -32,6 +32,19 @@ const router: Router = Router();
  *                 #     type: integer
  *                 #   descricao:
  *                 #     type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 # TODO: Defina aqui as propriedades de um Tema
+ *                 # Exemplo:
+ *                 # properties:
+ *                 #   id:
+ *                 #     type: integer
+ *                 #   descricao:
+ *                 #     type: string
  *       401:
  *         description: Não autorizado
  *       500:
@@ -96,6 +109,8 @@ router.get('/tema/:id', authMiddleware, temaController.checkIfExists);
  *         description: Tema deletado
  *       404:
  *         description: Tema não encontrado
+ *       500:
+ *         description: Erro interno do servidor
  *       500:
  *         description: Erro interno do servidor
  */

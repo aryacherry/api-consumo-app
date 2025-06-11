@@ -312,7 +312,8 @@ router.get('/dicas/:tema/:subtema', dicaController.getDica);
  *         description: Erro ao listar dicas de especialistas
  *       500:
  *         description: Erro interno do servidor
-
+ *       500:
+ *         description: Erro interno do servidor
  */
 
 
