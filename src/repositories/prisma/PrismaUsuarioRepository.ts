@@ -11,12 +11,24 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     constructor() {
         this.prisma = new PrismaClient()
     }
-
-    async create(user: Prisma.usuariosUncheckedCreateInput) {
+    create({ email, dicas, foto_usuario, is_monitor, nivel_consciencia, nome, receitas, senha, telefone, tokens, }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios> {
         return this.prisma.usuarios.create({
-            data: user,
+            data: {
+                email,
+                dicas,
+                foto_usuario,
+                is_monitor,
+                nivel_consciencia,
+                nome,
+                receitas,
+                senha,
+                telefone,
+                tokens,
+            },
         })
     }
+
+
 
     async updateOne({
         email,

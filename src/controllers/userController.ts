@@ -38,7 +38,13 @@ export const storeUser: RequestHandler = async (req, res, next) => {
     let uploadedImagePath = null
     try {
         const user = storeUserSchema.parse(req.body)
-
+        const existingUser = await userPrismaRepository.findByEmail({
+            email: user.email,
+        })
+        if (existingUser) {
+            res.status(400).json({ errors: ['Usuário já existe'] })
+            return
+        }
         let fotoUsuarioURL: string | null = null
 
         if (req.file) {
