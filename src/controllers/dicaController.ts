@@ -1,40 +1,46 @@
-
-import Dica from '../models/Dica';
+import Dica from '../models/Dica'
 //import { supabase } from '../supabase/client';
-import { TEMAS_VALIDOS } from '../utils/temas_validos';
-import Subtema from "../models/Subtemas";
-import { Request, Response } from 'express';
-import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository';
-import { PrismaDicaRepository } from '../repositories/prisma/PrismaDicaRepository';
-import { PrismaSubtemaRepository } from '../repositories/prisma/PrismaSubtemaRepository';
-import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepository';
-import { PrismaDicaSubtemaRepository } from '../repositories/prisma/PrismaDicaSubtemaRepository';
-/* interface Correlacao {
-    subtema: string;
-    tema: string;
-} */
+import Subtema from '../models/Subtemas'
+import type { NextFunction, Request, Response } from 'express'
+import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository'
+import { PrismaDicaRepository } from '../repositories/prisma/PrismaDicaRepository'
+import { PrismaSubtemaRepository } from '../repositories/prisma/PrismaSubtemaRepository'
+import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepository'
+import { PrismaDicaSubtemaRepository } from '../repositories/prisma/PrismaDicaSubtemaRepository'
 
 class DicaController {
-
-    async create(req: Request, res: Response): Promise<void> {
+    async create(
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> {
         try {
-            const dica = new Dica(req.body);
-            const { valid, errors } = dica.validate();
+            const dica = new Dica(req.body)
+            const { valid, errors } = dica.validate()
 
-            if (!valid) return handleError(res, errors?.join(', ') || '', 400, 'Dica Inválida');
+            if (!valid)
+                return handleError(
+                    res,
+                    errors?.join(', ') || '',
+                    400,
+                    'Dica Inválida',
+                )
 
-            const tema = req.body.tema;
+            const tema = req.body.tema
             const subtemas = req.body.subtemas
-                ? (Array.isArray(req.body.subtemas) ? req.body.subtemas : [req.body.subtemas])
-                : [];
-            const titulo = req.body.titulo;
+                ? Array.isArray(req.body.subtemas)
+                    ? req.body.subtemas
+                    : [req.body.subtemas]
+                : []
+            const titulo = req.body.titulo
 
             if (!titulo || titulo.trim() === '') {
-                return handleError(res, 'O campo "titulo" é obrigatório.', 400, 'Campo faltando');
-            }
-
-            if (!TEMAS_VALIDOS.includes(tema)) {
-                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Tema inválido');
+                return handleError(
+                    res,
+                    'O campo "titulo" é obrigatório.',
+                    400,
+                    'Campo faltando',
+                )
             }
 
             /* const { data: usuarioData, error: usuarioError } = await supabase
@@ -43,16 +49,19 @@ class DicaController {
                 .eq('email', dica.usuarioId)
                 .single(); */
 
-            const usuarioRepository = new PrismaUsuarioRepository();
+            const usuarioRepository = new PrismaUsuarioRepository()
             const isMonitor = await usuarioRepository.getMonitorStatusByEmail({
-                email: dica.usuarioId
+                email: dica.usuarioId,
             })
             if (isMonitor === null) {
-                return handleError(res, `O usuário com o email ${dica.usuarioId} não foi encontrado.`, 404, 'Usuário não encontrado');
+                return handleError(
+                    res,
+                    `O usuário com o email ${dica.usuarioId} não foi encontrado.`,
+                    404,
+                    'Usuário não encontrado',
+                )
             }
             const isCreatedBySpecialist = isMonitor
-
-
 
             /* const { data: dicaData, error: dicaError } = await supabase
                 .from('dicas')
@@ -67,20 +76,30 @@ class DicaController {
                     iscreatedbyspecialist: isCreatedBySpecialist,
                 })
                 .select(); */
-            const temaRepository = new PrismaTemaRepository();
-            const temaExists = await temaRepository.findByName({ nome: tema });
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({ nome: tema })
             if (!temaExists) {
-                return handleError(res, `O tema ${tema} não existe.`, 404, 'Tema não encontrado');
+                return handleError(
+                    res,
+                    `O tema ${tema} não existe.`,
+                    404,
+                    'Tema não encontrado',
+                )
             }
-            const subtemaObj = new Subtema(subtemas);
+            const subtemaObj = new Subtema(subtemas)
             if (subtemas.length > 0) {
-                const resultadoSubtema = await subtemaObj.validate();
+                const resultadoSubtema = await subtemaObj.validate()
 
                 if (resultadoSubtema.erros.length > 0) {
-                    return handleError(res, resultadoSubtema.erros?.join(', ') || '', 400, 'Erro ao processar subtemas');
+                    return handleError(
+                        res,
+                        resultadoSubtema.erros?.join(', ') || '',
+                        400,
+                        'Erro ao processar subtemas',
+                    )
                 }
 
-                for (let subtema of subtemas) {
+                for (const subtema of subtemas) {
                     /* const { data: temaSubtemaData, error: temaSubtemaError } = await supabase
                         .from('temaSubtema')
                         .select('*')
@@ -91,100 +110,89 @@ class DicaController {
                         return handleError(res, temaSubtemaError.message, 500, 'Erro ao verificar relação tema-subtema');
                     } */
 
-                    let subtemaData;
-                    try {
-                        const temaSubtemaRepository = new PrismaSubtemaRepository();
-                        subtemaData = await temaSubtemaRepository.findByTemaId({ tema_id: tema });
-                    } catch (error) {
-                        return handleError(res, String(error), 500, 'Erro ao verificar relação tema-subtema');
-                    }
-
+                    const temaSubtemaRepository = new PrismaSubtemaRepository()
+                    const subtemaData =
+                        await temaSubtemaRepository.findByTemaId({
+                            tema_id: tema,
+                        })
 
                     if (subtemaData.length === 0) {
-                        /* const { error: insertTemaSubtemaError } = await supabase
-                            .from('temaSubtema')
-                            .insert({
-                                tema: tema,
-                                subtema: subtema,
-                            });
-
-                        if (insertTemaSubtemaError) {
-                            return handleError(res, insertTemaSubtemaError.message, 500, 'Erro ao criar relação tema-subtema');
-                        } */
-                        const temaSubtemaRepository = new PrismaSubtemaRepository();
+                        const temaSubtemaRepository =
+                            new PrismaSubtemaRepository()
                         try {
                             await temaSubtemaRepository.create({
                                 tema_id: temaExists.id,
                                 nome: subtema,
-                                descricao: ''
-                            });
+                                descricao: '',
+                            })
                         } catch (error) {
-                            return handleError(res, String(error), 400, 'Erro ao criar relação tema-subtema');
+                            return handleError(
+                                res,
+                                String(error),
+                                400,
+                                'Erro ao criar relação tema-subtema',
+                            )
                         }
                     }
                 }
             }
-            let dicaData;
-            try {
-                const dicaRepository = new PrismaDicaRepository();
-                dicaData = await dicaRepository.create({
-                    tema_id: temaExists.id,
-                    usuario_id: dica.usuarioId,
-                    conteudo: dica.conteudo,
-                    titulo: titulo,
-                    is_verify: false,
-                    verify_by: null,
-                    data_criacao: new Date(),
-                    data_alteracao: new Date(),
-                    is_created_by_specialist: isCreatedBySpecialist
-                });
-            } catch (error) {
-                return handleError(res, String(error), 400, 'Dica inválida');
-            }
 
+            const dicaRepository = new PrismaDicaRepository()
+            const dicaData = await dicaRepository.create({
+                tema_id: temaExists.id,
+                usuario_id: dica.usuarioId,
+                conteudo: dica.conteudo,
+                titulo: titulo,
+                is_verify: false,
+                verify_by: null,
+                data_criacao: new Date(),
+                data_alteracao: new Date(),
+                is_created_by_specialist: isCreatedBySpecialist,
+            })
 
-            res.status(201).json({ message: 'Dica criada com sucesso', data: dicaData });
-            return;
-        } catch (e) {
-            if (e instanceof Error) {
-                return handleError(res, e.message);
-            }
+            res.status(201).json({
+                message: 'Dica criada com sucesso',
+                data: dicaData,
+            })
+            return
+        } catch (error) {
+            next(error)
         }
     }
 
     async getAll(_req: Request, res: Response): Promise<void> {
-
         try {
-
             /* const { data: dicas, error } = await supabase
                 .from('dicas')
                 .select('*, correlacaoDicas(tema, subtema)')
                 .order('id', { ascending: false });
 
             if (error) return handleError(res, error.message, 500, error.details);
- */         const dicasRepository = new PrismaDicaRepository();
-            const dicas = await dicasRepository.findAllWithCorrelacaoOrderById();
-            const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist
-                };
-            }));
+ */ const dicasRepository = new PrismaDicaRepository()
+            const dicas = await dicasRepository.findAllWithCorrelacaoOrderById()
+            const dicasComDetalhes = await Promise.all(
+                dicas.map(async (dica) => {
+                    return {
+                        id: dica.id,
+                        titulo: dica.titulo,
+                        conteudo: dica.conteudo,
+                        isVerify: dica.is_verify,
+                        idUsuario: dica.usuario_id,
+                        verifyBy: dica.verify_by,
+                        dataCriacao: dica.data_criacao,
+                        ultimaAlteracao: dica.data_alteracao,
+                        tema: dica.dicas_subtemas[0].subtema_id,
+                        subtemas: Array.from(dica.dicas_subtemas),
+                        isCreatedBySpecialist: dica.is_created_by_specialist,
+                    }
+                }),
+            )
 
-            res.json(dicasComDetalhes);
-            return;
+            res.json(dicasComDetalhes)
+            return
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
@@ -198,12 +206,16 @@ class DicaController {
                 .single();
 
             if (error || !dica) return handleError(res, `A dica com o código ${req.params.id} não foi encontrada.`, 404, 'Dica não encontrada');
- */         const dicaRepository = new PrismaDicaRepository();
+ */ const dicaRepository = new PrismaDicaRepository()
             const dica = await dicaRepository.findById(req.params.id)
             if (!dica) {
-                return handleError(res, `A dica com o código ${req.params.id} não foi encontrada.`, 404, 'Dica não encontrada');
+                return handleError(
+                    res,
+                    `A dica com o código ${req.params.id} não foi encontrada.`,
+                    404,
+                    'Dica não encontrada',
+                )
             }
-
 
             res.json({
                 id: dica.id,
@@ -216,34 +228,40 @@ class DicaController {
                 ultimaAlteracao: dica.data_alteracao,
                 tema: dica.dicas_subtemas[0].subtema_id,
                 subtemas: Array.from(dica.dicas_subtemas),
-            });
-
+            })
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async update(req: Request, res: Response): Promise<void> {
         try {
-            const updatedDica = new Dica(req.body);
-            const { valid, errors } = updatedDica.validate();
+            const updatedDica = new Dica(req.body)
+            const { valid, errors } = updatedDica.validate()
 
-            if (!valid) return handleError(res, errors?.join(', ') || '', 400, 'Essa dica não é válida');
+            if (!valid)
+                return handleError(
+                    res,
+                    errors?.join(', ') || '',
+                    400,
+                    'Essa dica não é válida',
+                )
 
-            const tema = req.body.tema;
-            const subtemas = req.body.subtemas;
+            const tema = req.body.tema
+            const subtemas = req.body.subtemas
 
-            if (!TEMAS_VALIDOS.includes(tema)) {
-                return handleError(res, `O tema ${tema} não é válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Tema inválido');
-            }
-
-            const subtemaObj = new Subtema(subtemas);
-            const resultadoSubtema = await subtemaObj.validate();
+            const subtemaObj = new Subtema(subtemas)
+            const resultadoSubtema = await subtemaObj.validate()
 
             if (resultadoSubtema.erros.length > 0) {
-                return handleError(res, resultadoSubtema.erros?.join(', ') || '', 400, 'Erro ao processar subtemas');
+                return handleError(
+                    res,
+                    resultadoSubtema.erros?.join(', ') || '',
+                    400,
+                    'Erro ao processar subtemas',
+                )
             }
 
             /* const { data: dicaAtualizada, error: updateError } = await supabase
@@ -256,71 +274,48 @@ class DicaController {
 
             if (updateError) return handleError(res, updateError.message, 500, updateError.details);
              */
-            const dicaRepository = new PrismaDicaRepository();
+            const dicaRepository = new PrismaDicaRepository()
             const dicaAtualizada = await dicaRepository.update(req.params.id, {
                 conteudo: updatedDica.conteudo,
-            });
+            })
             if (!dicaAtualizada) {
-                return handleError(res, `Dica com o código ${req.params.id} não encontrada.`, 404, 'Dica não encontrada');
+                return handleError(
+                    res,
+                    `Dica com o código ${req.params.id} não encontrada.`,
+                    404,
+                    'Dica não encontrada',
+                )
             }
 
-            const temaRepository = new PrismaTemaRepository();
-            const temaExists = await temaRepository.findByName({ nome: tema });
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({ nome: tema })
             if (!temaExists) {
-                return handleError(res, `O tema ${tema} não existe.`, 404, 'Tema não encontrado');
+                return handleError(
+                    res,
+                    `O tema ${tema} não existe.`,
+                    404,
+                    'Tema não encontrado',
+                )
             }
-            for (let subtema of subtemas) {
-                /* const { data: temaSubtemaData, error: temaSubtemaError } = await supabase
-                    .from('temaSubtema')
-                    .select('*')
-                    .eq('tema', tema)
-                    .eq('subtema', subtema);
-
-                if (temaSubtemaError) {
-                    return handleError(res, temaSubtemaError.message, 500, 'Erro ao verificar relação tema-subtema');
-                } */
-                const subtemaData = await temaRepository.getSubtemasByTema({ temaId: temaExists.id });
-                let subtemaCreated;
+            for (const subtema of subtemas) {
+                let subtemaData = await temaRepository.getSubtemasByTema({
+                    temaId: temaExists.id,
+                })
                 if (!subtemaData || subtemaData.length === 0) {
-                    /* const { error: insertTemaSubtemaError } = await supabase
-                        .from('temaSubtema')
-                        .insert({
-                            tema: tema,
-                            subtema: subtema,
-                        });
-
-                    if (insertTemaSubtemaError) {
-                        return handleError(res, insertTemaSubtemaError.message, 500, 'Erro ao criar relação tema-subtema');
-                    } */
-                    /* await temaSubtemaRepository.create({
-                        tema_id: tema,
-                        subtema_id: subtema
-                    }); */
-                    const subtemaRepository = new PrismaSubtemaRepository();
-                    subtemaCreated = await subtemaRepository.create({
+                    const subtemaRepository = new PrismaSubtemaRepository()
+                    const createdSubtema = await subtemaRepository.create({
                         tema_id: temaExists.id,
                         nome: subtema,
-                        descricao: ''
-                    });
+                        descricao: '',
+                    })
+                    subtemaData = [createdSubtema]
                 }
-
-                /* const { error: correlacaoError } = await supabase
-                    .from('correlacaoDicas')
-                    .upsert({
-                        idDicas: req.params.id,
-                        tema: tema,
-                        subtema: subtema,
-                    });
-
-                if (correlacaoError) {
-                    return handleError(res, correlacaoError.message, 500, correlacaoError.details);
-                } */
-                const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
+                const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
                 await dicaSubtemaRepository.create({
                     dica_id: req.params.id,
-                    subtema_id: subtemaCreated?.id || subtemaData[0].id,
-                    assunto: ''
-                });
+                    subtema_id: subtemaData[0].id,
+                    assunto: '',
+                })
             }
 
             /* const { data: correlacoesAtuais, error: fetchCorrelacaoError } = await supabase
@@ -331,11 +326,15 @@ class DicaController {
             if (fetchCorrelacaoError) {
                 return handleError(res, fetchCorrelacaoError.message, 500, fetchCorrelacaoError.details);
             } */
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
+            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
 
-            const subtemasAtuais = await dicaSubtemaRepository.findByDicaId(req.params.id);
+            const subtemasAtuais = await dicaSubtemaRepository.findByDicaId(
+                req.params.id,
+            )
 
-            const subtemasParaRemover = subtemasAtuais.filter(subtemaAtual => !subtemas.includes(subtemaAtual.subtema_id));
+            const subtemasParaRemover = subtemasAtuais.filter(
+                (subtemaAtual) => !subtemas.includes(subtemaAtual.subtema_id),
+            )
 
             if (subtemasParaRemover.length > 0) {
                 /* const { error: deleteCorrelacaoError } = await supabase
@@ -347,54 +346,62 @@ class DicaController {
                 if (deleteCorrelacaoError) {
                     return handleError(res, deleteCorrelacaoError.message, 500, deleteCorrelacaoError.details);
                 } */
-                await dicaSubtemaRepository.deleteMany(req.params.id);
+                await dicaSubtemaRepository.deleteMany(req.params.id)
             }
 
-            res.status(200).json({ message: 'Dica e correlações atualizadas com sucesso', data: dicaAtualizada });
-            return;
+            res.status(200).json({
+                message: 'Dica e correlações atualizadas com sucesso',
+                data: dicaAtualizada,
+            })
+            return
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async delete(req: Request, res: Response): Promise<void> {
         try {
-            const dicaId = req.params.id;
-/*
+            const dicaId = req.params.id
+            /*
             const { error: deleteCorrelacaoError } = await supabase
                 .from('correlacaoDicas')
                 .delete()
                 .eq('idDicas', dicaId);
 
             if (deleteCorrelacaoError) return handleError(res, deleteCorrelacaoError.message, 500, deleteCorrelacaoError.details);
- */         const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
-            await dicaSubtemaRepository.deleteMany(req.params.id);
+ */ const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
+            await dicaSubtemaRepository.deleteMany(req.params.id)
             /* const { error: deleteDicaError } = await supabase
                 .from('dicas')
                 .delete()
                 .eq('id', dicaId);
 
             if (deleteDicaError) return handleError(res, deleteDicaError.message, 500, deleteDicaError.details);
- */         const dicaRepository = new PrismaDicaRepository();
-            await dicaRepository.delete(dicaId);
-            res.status(204).end();
-            return;
+ */ const dicaRepository = new PrismaDicaRepository()
+            await dicaRepository.delete(dicaId)
+            res.status(204).end()
+            return
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async verify(req: Request, res: Response): Promise<void> {
         try {
-            const verifyBy = req.body.verifyBy;
-            const id = req.params.id;
+            const verifyBy = req.body.verifyBy
+            const id = req.params.id
 
             if (!verifyBy) {
-                return handleError(res, `O campo 'verifyBy' é obrigátorio.`, 400, 'Input inválido');
+                return handleError(
+                    res,
+                    `O campo 'verifyBy' é obrigátorio.`,
+                    400,
+                    'Input inválido',
+                )
             }
 
             /* const { data: user, error: userError } = await supabase
@@ -402,19 +409,29 @@ class DicaController {
                 .select('isMonitor')
                 .eq('email', verifyBy)
                 .maybeSingle(); */
-            const usuarioRepository = new PrismaUsuarioRepository();
-            const user = await usuarioRepository.findByEmail(verifyBy);
+            const usuarioRepository = new PrismaUsuarioRepository()
+            const user = await usuarioRepository.findByEmail(verifyBy)
             if (!user) {
-                return handleError(res, `O usuário com o email ${verifyBy} não foi encontrado.`, 404, 'Usuário não encontrado');
+                return handleError(
+                    res,
+                    `O usuário com o email ${verifyBy} não foi encontrado.`,
+                    404,
+                    'Usuário não encontrado',
+                )
             }
             const isMonitor = await usuarioRepository.getMonitorStatusByEmail({
-                email: verifyBy
-            });
+                email: verifyBy,
+            })
             if (!isMonitor) {
-                return handleError(res, `O usuário com o email ${verifyBy} não é um monitor.`, 400, 'Usuário não é monitor');
+                return handleError(
+                    res,
+                    `O usuário com o email ${verifyBy} não é um monitor.`,
+                    400,
+                    'Usuário não é monitor',
+                )
             }
 
-           /*  const { data: dica, error } = await supabase
+            /*  const { data: dica, error } = await supabase
                 .from('dicas')
                 .update({
                     isVerify: true,
@@ -425,30 +442,45 @@ class DicaController {
                 .select();
 
             if (error) return handleError(res, error.message, 500, error.details);
- */       const dicaRepository = new PrismaDicaRepository();
-            const dica = await dicaRepository.findById(id);
-            if (!dica) return handleError(res, `A dica com o código ${id} não foi encontrada.`, 404, 'Dica não encontrada');
+ */ const dicaRepository = new PrismaDicaRepository()
+            const dica = await dicaRepository.findById(id)
+            if (!dica)
+                return handleError(
+                    res,
+                    `A dica com o código ${id} não foi encontrada.`,
+                    404,
+                    'Dica não encontrada',
+                )
             await dicaRepository.update(id, {
                 is_verify: true,
                 verify_by: verifyBy,
-                data_alteracao: new Date()
-            });
-            res.status(200).json({ message: `A dica com o código ${id} foi verificada com sucesso pelo usuário com o email ${verifyBy}.` });
-            return;
+                data_alteracao: new Date(),
+            })
+            res.status(200).json({
+                message: `A dica com o código ${id} foi verificada com sucesso pelo usuário com o email ${verifyBy}.`,
+            })
+            return
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async getAllVerifiedByTheme(req: Request, res: Response): Promise<void> {
         try {
-
-            const { dicaId, tema } = req.params;
-
-            if (!TEMAS_VALIDOS.includes(tema)) {
-                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
+            const { dicaId, tema } = req.params
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({
+                nome: tema,
+            })
+            if (!temaExists) {
+                return handleError(
+                    res,
+                    `O tema ${tema} não existe.`,
+                    404,
+                    'Tema não encontrado',
+                )
             }
 
             /* const { data: idPost, error: idPostError } = await supabase
@@ -458,9 +490,10 @@ class DicaController {
 
             if (idPostError) return handleError(res, idPostError.message, 500, idPostError.details);
              */
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
-            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId);
-            if (!idPost) return handleError(res, 'Nenhuma receita encontrada', 404);
+            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
+            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
+            if (!idPost)
+                return handleError(res, 'Nenhuma receita encontrada', 404)
 
             /* const { data: dicas, error } = await supabase
                 .from('dicas')
@@ -471,46 +504,53 @@ class DicaController {
 
             if (error) return handleError(res, error.message, 500, error.details);
  */
-            const dicaRepository = new PrismaDicaRepository();
-            const dicas = await dicaRepository.findAllByIsVerify(true);
-            const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                /* const subtemas = new Set();
+            const dicaRepository = new PrismaDicaRepository()
+            const dicas = await dicaRepository.findAllByIsVerify(true)
+            const dicasComDetalhes = await Promise.all(
+                dicas.map(async (dica) => {
+                    /* const subtemas = new Set();
 
                 dica.correlacaoDicas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 }); */
 
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist
-                };
-            }));
+                    return {
+                        id: dica.id,
+                        titulo: dica.titulo,
+                        conteudo: dica.conteudo,
+                        isVerify: dica.is_verify,
+                        idUsuario: dica.usuario_id,
+                        verifyBy: dica.verify_by,
+                        dataCriacao: dica.data_criacao,
+                        ultimaAlteracao: dica.data_alteracao,
+                        tema: dica.dicas_subtemas[0].subtema_id,
+                        subtemas: Array.from(dica.dicas_subtemas),
+                        isCreatedBySpecialist: dica.is_created_by_specialist,
+                    }
+                }),
+            )
 
-            res.json(dicasComDetalhes);
-            return;
+            res.json(dicasComDetalhes)
+            return
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async getAllNotVerifiedByTheme(req: Request, res: Response): Promise<void> {
         try {
-
-            const { dicaId, tema } = req.params;
-
-            if (!TEMAS_VALIDOS.includes(tema)) {
-                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
+            const { dicaId, tema } = req.params
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({ nome: tema })
+            if (!temaExists) {
+                return handleError(
+                    res,
+                    `O tema ${tema} não existe.`,
+                    404,
+                    'Tema não encontrado',
+                )
             }
 
             /* const { data: idPost, error: idPostError } = await supabase
@@ -520,9 +560,10 @@ class DicaController {
 
             if (idPostError) return handleError(res, idPostError.message, 500, idPostError.details);
              */
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
-            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId);
-            if (!idPost) return handleError(res, 'Nenhuma receita encontrada', 404);
+            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
+            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
+            if (!idPost)
+                return handleError(res, 'Nenhuma receita encontrada', 404)
 
             /* const { data: dicas, error } = await supabase
                 .from('dicas')
@@ -532,46 +573,52 @@ class DicaController {
                 .order('id', { ascending: false });
 
             if (error) return handleError(res, error.message, 500, error.details);
- */       const dicaRepository = new PrismaDicaRepository();
-            const dicas = await dicaRepository.findAllByIsVerify(false);
-            const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                /* const subtemas = new Set();
+ */ const dicaRepository = new PrismaDicaRepository()
+            const dicas = await dicaRepository.findAllByIsVerify(false)
+            const dicasComDetalhes = await Promise.all(
+                dicas.map(async (dica) => {
+                    /* const subtemas = new Set();
 
                 dica.correlacaoDicas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 });
  */
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist
-                };
-            }));
+                    return {
+                        id: dica.id,
+                        titulo: dica.titulo,
+                        conteudo: dica.conteudo,
+                        isVerify: dica.is_verify,
+                        idUsuario: dica.usuario_id,
+                        verifyBy: dica.verify_by,
+                        dataCriacao: dica.data_criacao,
+                        ultimaAlteracao: dica.data_alteracao,
+                        tema: dica.dicas_subtemas[0].subtema_id,
+                        subtemas: Array.from(dica.dicas_subtemas),
+                        isCreatedBySpecialist: dica.is_created_by_specialist,
+                    }
+                }),
+            )
 
-            res.json(dicasComDetalhes);
-
+            res.json(dicasComDetalhes)
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async getAllByTheme(req: Request, res: Response): Promise<void> {
         try {
-
-            const { dicaId, tema } = req.params;
-
-            if (!TEMAS_VALIDOS.includes(tema)) {
-                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
+            const { dicaId, tema } = req.params
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({ nome: tema })
+            if (!temaExists) {
+                return handleError(
+                    res,
+                    `O tema ${tema} não existe.`,
+                    404,
+                    'Tema não encontrado',
+                )
             }
 
             /* const { data: idPost, error: idPostError } = await supabase
@@ -582,9 +629,10 @@ class DicaController {
 
             if (idPostError) return handleError(res, idPostError.message, 500, idPostError.details);
              */
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
-            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId);
-            if (!idPost) return handleError(res, 'Nenhuma receita encontrada', 404);
+            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
+            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
+            if (!idPost)
+                return handleError(res, 'Nenhuma receita encontrada', 404)
 
             /* const { data: dicas, error } = await supabase
                 .from('dicas')
@@ -592,47 +640,50 @@ class DicaController {
                 .in('id', idPost.map(post => post.idDicas));
 
             if (error) return handleError(res, error.message, 500, error.details);
- */          const dicaRepository = new PrismaDicaRepository();
-            const dicas = await dicaRepository.findAllWithCorrelacaoOrderById();
-            const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                /* const subtemas = new Set();
+ */ const dicaRepository = new PrismaDicaRepository()
+            const dicas = await dicaRepository.findAllWithCorrelacaoOrderById()
+            const dicasComDetalhes = await Promise.all(
+                dicas.map(async (dica) => {
+                    /* const subtemas = new Set();
 
                 dica.correlacaoDicas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 }); */
 
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist
-                };
-            }));
+                    return {
+                        id: dica.id,
+                        titulo: dica.titulo,
+                        conteudo: dica.conteudo,
+                        isVerify: dica.is_verify,
+                        idUsuario: dica.usuario_id,
+                        verifyBy: dica.verify_by,
+                        dataCriacao: dica.data_criacao,
+                        ultimaAlteracao: dica.data_alteracao,
+                        tema: dica.dicas_subtemas[0].subtema_id,
+                        subtemas: Array.from(dica.dicas_subtemas),
+                        isCreatedBySpecialist: dica.is_created_by_specialist,
+                    }
+                }),
+            )
 
-            res.json(dicasComDetalhes);
-            return;
+            res.json(dicasComDetalhes)
+            return
         } catch (e) {
             if (e instanceof Error) {
-                return handleError(res, e.message);
+                return handleError(res, e.message)
             }
         }
     }
 
     async getDica(req: Request, res: Response): Promise<void> {
         try {
-            const tema = req.params.tema;
-            const subtemas = req.params.subtema.split(',');
+            /* const { tema } = req.params
+            const subtemas = req.params.subtema.split(',')
 
-
-            const subtemasQuery = subtemas.map(subtema => `subtema.eq.${subtema}`).join(',');
-            const dicaId = req.params.dicaId;
+            const subtemasQuery = subtemas
+                .map((subtema) => `subtema.eq.${subtema}`)
+                .join(',') */
+            const dicaId = req.params.dicaId
             /* const { data: correlacoes, error: correlacaoError } = await supabase
                 .from('correlacaoDicas')
                 .select()
@@ -644,19 +695,20 @@ class DicaController {
                 res.status(500).json({ error: `Erro ao buscar correlações de dicas: ${correlacaoError.message}` });
                 return;
             } */
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
-            const correlacoes = await dicaSubtemaRepository.findByDicaId(dicaId);
+            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
+            const correlacoes = await dicaSubtemaRepository.findByDicaId(dicaId)
 
             if (!correlacoes || correlacoes.length === 0) {
-                res.status(200).json([]);
-                return;
+                res.status(200).json([])
+                return
             }
 
-
-            const idsDicas = [...new Set(correlacoes.map(correlacao => correlacao.dica_id))];
+            const idsDicas = [
+                ...new Set(correlacoes.map((correlacao) => correlacao.dica_id)),
+            ]
             if (idsDicas.length === 0) {
-                res.status(200).json([]);
-                return;
+                res.status(200).json([])
+                return
             }
 
             /* const { data: dicas, error: dicasError } = await supabase
@@ -671,49 +723,58 @@ class DicaController {
                 res.status(500).json({ error: `Erro ao buscar as dicas: ${dicasError.message}` });
                 return;
             } */
-            const dicaRepository = new PrismaDicaRepository();
-            const dicas = await dicaRepository.findAllByIsVerify(true);
+            const dicaRepository = new PrismaDicaRepository()
+            const dicas = await dicaRepository.findAllByIsVerify(true)
 
-            const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                /* const subtemas = new Set();
+            const dicasComDetalhes = await Promise.all(
+                dicas.map(async (dica) => {
+                    /* const subtemas = new Set();
 
                 dica.correlacaoDicas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 }); */
 
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas?.[0]?.subtema_id || null,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist
-                };
-            }));
+                    return {
+                        id: dica.id,
+                        titulo: dica.titulo,
+                        conteudo: dica.conteudo,
+                        isVerify: dica.is_verify,
+                        idUsuario: dica.usuario_id,
+                        verifyBy: dica.verify_by,
+                        dataCriacao: dica.data_criacao,
+                        ultimaAlteracao: dica.data_alteracao,
+                        tema: dica.dicas_subtemas?.[0]?.subtema_id || null,
+                        subtemas: Array.from(dica.dicas_subtemas),
+                        isCreatedBySpecialist: dica.is_created_by_specialist,
+                    }
+                }),
+            )
 
-            res.json(dicasComDetalhes);
-            return;
+            res.json(dicasComDetalhes)
+            return
         } catch (e) {
-            console.error('Erro ao buscar dicas por subtemas:', e);
+            console.error('Erro ao buscar dicas por subtemas:', e)
             if (e instanceof Error) {
-                res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
-                return;
+                res.status(500).json({
+                    error: `Erro interno ao processar a solicitação: ${e.message}`,
+                })
+                return
             }
         }
     }
 
     async getSpecialistsDica(req: Request, res: Response): Promise<void> {
         try {
-
-            const { dicaId, tema } = req.params;
-
-            if (!TEMAS_VALIDOS.includes(tema)) {
-                return handleError(res, `O tema ${tema} não é um tema válido. Temas válidos: ${TEMAS_VALIDOS.join(', ')}.`, 400, 'Input inválido');
+            const { dicaId, tema } = req.params
+            const temaRepository = new PrismaTemaRepository()
+            const temaExists = await temaRepository.findByName({ nome: tema })
+            if (!temaExists) {
+                return handleError(
+                    res,
+                    `O tema ${tema} não existe.`,
+                    404,
+                    'Tema não encontrado',
+                )
             }
 
             /* const { data: idPost, error: idPostError } = await supabase
@@ -724,9 +785,10 @@ class DicaController {
 
             if (idPostError) return handleError(res, idPostError.message, 500, idPostError.details);
              */
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository();
-            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId);
-            if (!idPost) return handleError(res, 'Nenhuma receita encontrada', 404);
+            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
+            const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
+            if (!idPost)
+                return handleError(res, 'Nenhuma receita encontrada', 404)
 
             /* const { data: dicas, error } = await supabase
                 .from('dicas')
@@ -737,48 +799,57 @@ class DicaController {
 
             if (error) return handleError(res, error.message, 500, error.details);
  */
-            const dicaRepository = new PrismaDicaRepository();
-            const dicas = await dicaRepository.findAllCreatedBySpecialist(true);
-            const dicasComDetalhes = await Promise.all(dicas.map(async (dica) => {
-                /* const subtemas = new Set();
+            const dicaRepository = new PrismaDicaRepository()
+            const dicas = await dicaRepository.findAllCreatedBySpecialist(true)
+            const dicasComDetalhes = await Promise.all(
+                dicas.map(async (dica) => {
+                    /* const subtemas = new Set();
 
                 dica.correlacaoDicas?.forEach((correlacao: Correlacao) => {
                     if (correlacao.subtema) subtemas.add(correlacao.subtema);
                 }); */
 
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist
-                };
-            }));
+                    return {
+                        id: dica.id,
+                        titulo: dica.titulo,
+                        conteudo: dica.conteudo,
+                        isVerify: dica.is_verify,
+                        idUsuario: dica.usuario_id,
+                        verifyBy: dica.verify_by,
+                        dataCriacao: dica.data_criacao,
+                        ultimaAlteracao: dica.data_alteracao,
+                        tema: dica.dicas_subtemas[0].subtema_id,
+                        subtemas: Array.from(dica.dicas_subtemas),
+                        isCreatedBySpecialist: dica.is_created_by_specialist,
+                    }
+                }),
+            )
 
-            res.json(dicasComDetalhes);
-            return;
+            res.json(dicasComDetalhes)
+            return
         } catch (e) {
-            console.error('Erro ao buscar dicas por subtemas:', e);
+            console.error('Erro ao buscar dicas por subtemas:', e)
             if (e instanceof Error) {
-                res.status(500).json({ error: `Erro interno ao processar a solicitação: ${e.message}` });
-                return;
+                res.status(500).json({
+                    error: `Erro interno ao processar a solicitação: ${e.message}`,
+                })
+                return
             }
         }
     }
 }
 
-function handleError(res: Response, detail = 'An error has occurred.', status = 500, message = 'Internal Server Error') {
-    console.log(`Error: ${message} - ${detail}`);
+function handleError(
+    res: Response,
+    detail = 'An error has occurred.',
+    status = 500,
+    message = 'Internal Server Error',
+) {
+    console.log(`Error: ${message} - ${detail}`)
     if (!res.headersSent) {
-        res.status(status).json({ message, detail });
-        return;
+        res.status(status).json({ message, detail })
+        return
     }
 }
 
-export default new DicaController();
+export default new DicaController()

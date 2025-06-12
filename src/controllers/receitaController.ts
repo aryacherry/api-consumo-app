@@ -130,7 +130,8 @@ export const getAll: RequestHandler = async (_req, res, next) => {
         const receitaRepository = new PrismaReceitaRepository()
         const temaRepository = new PrismaTemaRepository()
         const subtemaRepository = new PrismaSubtemaRepository()
-        const receitas = (await receitaRepository.findAll()).map(
+        const receitas = await receitaRepository.findAll()
+        const receitasFormatadas = await Promise.all(receitas.map(
             async (receita) => {
                 const tema = await temaRepository.findById({
                     id: receita.tema_id,
@@ -138,6 +139,15 @@ export const getAll: RequestHandler = async (_req, res, next) => {
                 const subtemas = await subtemaRepository.findByTemaId({
                     tema_id: receita.tema_id,
                 })
+                let fotos: string
+                try {
+                    fotos = JSON.parse(
+                        Buffer.from(receita.image_source, 'base64').toString(
+                            'utf-8',
+                        ))
+                } catch (_error) {
+                    fotos = receita.image_source
+                }
                 return {
                     id: receita.id,
                     titulo: receita.titulo,
@@ -147,15 +157,11 @@ export const getAll: RequestHandler = async (_req, res, next) => {
                     tema: tema?.nome || null,
                     subtemas: subtemas.map((subtema) => subtema.nome),
                     ingredientes: receita.ingredientes,
-                    fotos: JSON.parse(
-                        Buffer.from(receita.image_source, 'base64').toString(
-                            'utf-8',
-                        ),
-                    ),
+                    fotos,
                 }
             },
-        )
-        res.status(200).json({ receitas })
+        ))
+        res.status(200).json({ receitas: receitasFormatadas })
         return
     } catch (error) {
         next(error)
