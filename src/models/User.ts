@@ -12,18 +12,6 @@ interface UserInterface {
     fotoUsu: string;
 }
 
-interface SaveResponse {
-    id: number;
-    email: string;
-    tokens: string;
-    senha: string;
-    nome: string;
-    telefone: string;
-    ni_conciencia: string;
-    is_monitor: boolean;
-    foto_usuario: string;
-}
-
 class User {
 
     // Definindo os atributos da classe
@@ -37,7 +25,7 @@ class User {
     fotoUsu: string;
 
     // Construtor da classe
-    constructor({ email, tokens, senha, nome, telefone, nivelConsciencia, isMonitor, fotoUsu } : UserInterface) {
+    constructor({ email, tokens, senha, nome, telefone, nivelConsciencia, isMonitor, fotoUsu }: UserInterface) {
         this.email = email;
         this.tokens = tokens;
         this.senha = senha;
@@ -87,7 +75,7 @@ class User {
     }
 
     // Método para salvar se o usuário já existe no banco de dados
-    async save(){
+    async save() {
         const password_hash = await argon2.hash(this.senha);
 
         const { data, error } = await supabase
@@ -111,7 +99,7 @@ class User {
         }
 
         return data; // Retorna o primeiro usuário inserido
-    }   
+    }
 
     // Método para validar a senha do usuário
     async passwordIsValid(password: string): Promise<boolean> {

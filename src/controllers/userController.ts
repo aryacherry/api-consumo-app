@@ -1,41 +1,46 @@
-import User from '../models/User'
 import { supabase } from '../supabase/client'
 import { v4 as uuidv4 } from 'uuid'
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
-import type { Request, Response } from 'express'
-import { error } from 'console'
+import type { RequestHandler } from 'express'
 import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository'
 import { z } from 'zod'
-import type { RequestHandler } from 'express-serve-static-core'
 
 const userPrismaRepository = new PrismaUsuarioRepository()
 
-export async function storeUser(req: Request, res: Response): Promise<void> {
+const storeUserSchema = z.object({
+    nome: z.string({
+        required_error: 'Nome é obrigatório',
+        invalid_type_error: 'Nome deve ser um texto',
+    }).min(3, 'Nome deve ter pelo menos 3 caracteres.').max(51, 'Nome deve ter no máximo 51 caracteres.'),
+    email: z.string({
+        required_error: 'Email é obrigatório',
+        invalid_type_error: 'Email deve ser um texto',
+    }).email({
+        message: 'Deve ser um email válido',
+    }),
+    telefone: z.string({
+        required_error: 'Telefone é obrigatório',
+        invalid_type_error: 'Telefone deve ser um texto',
+    }).regex(/^\+?[1-9]\d{1,14}$/, 'Número de telefone inválido'),
+    tokens: z.string({
+        required_error: 'Tokens é obrigatório',
+        invalid_type_error: 'Tokens deve ser um texto',
+    }),
+    senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.').max(255, 'A senha deve ter no máximo 255 caracteres.'),
+    nivelConsciencia: z.number().min(0, 'Nível de consciência deve ser pelo menos 0.').max(5, 'Nível de consciência deve ser no máximo 5.'),
+    isMonitor: z.boolean(),
+    fotoUsu: z.string().url().optional()
+})
+
+export const storeUser: RequestHandler = async (req, res, next) => {
     let uploadedImagePath = null
     try {
-        const user = new User({
-            email: req.body.email,
-            tokens: req.body.tokens,
-            senha: req.body.senha,
-            nome: req.body.nome,
-            telefone: req.body.telefone,
-            nivelConsciencia: req.body.nivelConsciencia,
-            isMonitor: req.body.isMonitor,
-            fotoUsu: '',
-        })
-
-        const { valid, errors } = user.validate()
-
-        if (!valid) {
-            res.status(400).json({ errors })
-            return
-        }
+        const user = storeUserSchema.parse(req.body)
 
         let fotoUsuarioURL: string | null = null
 
-        // Se a imagem foi carregada
         if (req.file) {
             const uploadResult = await uploadImage(req.file)
 
@@ -52,29 +57,26 @@ export async function storeUser(req: Request, res: Response): Promise<void> {
         // O hash da senha é gerado aqui
         const hashedPassword = await argon2.hash(user.senha)
 
-        await userPrismaRepository.create({
+        const createdUser = await userPrismaRepository.create({
             email: user.email,
             senha: hashedPassword,
             nome: user.nome,
             telefone: user.telefone,
-            nivel_consciencia: user.nivelConsciencia,
+            nivel_consciencia: String(user.nivelConsciencia),
             is_monitor: user.isMonitor,
             tokens: user.tokens,
-            foto_usuario: fotoUsuarioURL ?? '', //Não a variável sem definicao
+            foto_usuario: fotoUsuarioURL ?? '',
         })
 
-        res.status(201).json({ message: 'Usuário criado com sucesso' })
+        res.status(201).json({ user: createdUser })
         return
-    } catch (e) {
+    } catch (error) {
         if (uploadedImagePath) {
             await supabase.storage
                 .from('fotoPerfil')
                 .remove([uploadedImagePath])
         }
-        if (e instanceof Error) {
-            res.status(400).json({ errors: [e.message] })
-            return
-        }
+        next(error)
     }
 }
 
@@ -97,24 +99,21 @@ export const indexUser: RequestHandler = async (_req, res, next) => {
         next(error)
     }
 }
-//funcionando pos alteracao bd
-export async function showUser(req: Request, res: Response): Promise<void> {
+
+const showUserSchema = z.object({
+    email: z.string({
+        required_error: 'Email é obrigatório',
+        invalid_type_error: 'Email deve ser um texto',
+    }).email({
+        message: 'Deve ser um email válido',
+    }),
+})
+
+export const showUser: RequestHandler = async (req, res, next) => {
     try {
-        /*const { data: user, error } = await supabase
-            .from('usuarios')
-            .select('email, nome, telefone, nivelConsciencia, isMonitor, fotoUsu')
-            .eq('email', req.params.email)
-            .single();
-
-        if (error || !user) {
-             res.status(404).json({ errors: ['Usuário não encontrado'] });
-             return;
-        }
-
-         res.json(user);
-         return;*/
+        const { email } = showUserSchema.parse(req.params)
         const user = await userPrismaRepository.findByEmail({
-            email: req.params.email,
+            email,
         })
 
         if (!user) {
@@ -122,73 +121,48 @@ export async function showUser(req: Request, res: Response): Promise<void> {
             return
         }
 
-        res.json({
-            email: user.email,
-            nome: user.nome,
-            telefone: user.telefone,
-            nivel_consciencia: user.nivel_consciencia,
-            isMonitor: user.is_monitor,
-            foto_usuario: user.foto_usuario,
-        })
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(400).json({ errors: [e.message] })
-            return
-        }
+        res.status(200).json({ user })
+    } catch (error) {
+        next(error)
     }
 }
-//Funcionando pos alteracao
-export async function updateUser(req: Request, res: Response): Promise<void> {
+
+const updateUserBodySchema = z.object({
+    nome: z.string({
+        required_error: 'Nome é obrigatório',
+        invalid_type_error: 'Nome deve ser um texto',
+    })
+        .min(3, 'Nome deve ter pelo menos 3 caracteres.')
+        .max(51, 'Nome deve ter no máximo 51 caracteres.')
+        .optional(),
+    telefone: z.string({
+        required_error: 'Telefone é obrigatório',
+        invalid_type_error: 'Telefone deve ser um texto',
+    }).regex(/^\+?[1-9]\d{1,14}$/, 'Número de telefone inválido').optional(),
+    senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.').max(255, 'A senha deve ter no máximo 255 caracteres.').optional(),
+    nivelConsciencia: z.number().min(0, 'Nível de consciência deve ser pelo menos 0.').max(5, 'Nível de consciência deve ser no máximo 5.').optional(),
+    isMonitor: z.boolean().optional(),
+    fotoUsu: z.string().url().optional()
+})
+
+const updateUserParamsSchema = z.object({
+    email: z.string({
+        required_error: 'Email é obrigatório',
+        invalid_type_error: 'Email deve ser um texto',
+    }).email({
+        message: 'Deve ser um email válido',
+    }),
+})
+
+export const updateUser: RequestHandler = async (req, res, next) => {
     let uploadedImagePath = null
 
     try {
-        /*const { data: user, error: fetchError } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('email', req.params.email)
-            .single();
- 
-        if (fetchError || !user) {
-            res.status(400).json({ errors: ['Usuário não encontrado'] });
-            return;
-        }
- 
-        let fotoUsuarioURL = user["Foto.usu"];
- 
-        if (req.file) {
-            const uploadResult = await uploadImage(req.file);
-            
-        if (!uploadResult) {
-          res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
-          return;
-        }
-
-            fotoUsuarioURL = uploadResult.url;
-            uploadedImagePath = uploadResult.path;
-        }
- 
-        // Prepare the data to be updated
-        const updatedData = { ...req.body, fotoUsu: fotoUsuarioURL };
- 
-        // Verificação e hash da senha
-        if (req.body.senha) {  // Use 'senha' em minúsculas
-            console.log("Hashing a senha...");
-            updatedData.senha = await argon2.hash(req.body.senha.trim());  // 'senha' em minúsculas
-        }
- 
-        const { error: updateError } = await supabase
-            .from('usuarios')
-            .update(updatedData)
-            .eq('email', req.params.email);
- 
-        if (updateError) throw updateError;
- 
-        res.json({ message: 'Usuário atualizado com sucesso' });
-        return;*/
-        const userEmail = req.params.email
+        const { email } = updateUserParamsSchema.parse(req.params)
+        const updateDataParser = updateUserBodySchema.parse(req.body)
 
         const user = await userPrismaRepository.findByEmail({
-            email: userEmail,
+            email,
         })
 
         if (!user) {
@@ -211,61 +185,46 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
             uploadedImagePath = uploadResult.path
         }
 
-        const updatedData = {
-            email: userEmail,
-            ...req.body,
+        const updatedDataFormatter = {
+            email,
+            ...(updateDataParser.nome && { nome: updateDataParser.nome }),
+            ...(updateDataParser.telefone !== undefined && { telefone: updateDataParser.telefone }),
+            ...(updateDataParser.nivelConsciencia !== undefined && {
+                nivel_consciencia: String(updateDataParser.nivelConsciencia),
+            }),
+            ...(updateDataParser.isMonitor !== undefined && { is_monitor: updateDataParser.isMonitor }),
+            ...(updateDataParser.senha && { senha: await argon2.hash(updateDataParser.senha.trim()) }), // A senha só será atualizada se for fornecida
             foto_usuario: fotoUsuarioURL,
-        } // usa o operador spread (...) para copiar todas as propriedades de req.body
-
-        if (req.body.senha) {
-            updatedData.senha = await argon2.hash(req.body.senha.trim())
         }
 
-        await userPrismaRepository.updateOne(updatedData)
+        const userAtualizado = await userPrismaRepository.updateOne(updatedDataFormatter)
 
-        res.json({ message: 'Usuário atualizado com sucesso' })
-    } catch (e) {
-        if (e instanceof Error) {
-            console.error('Erro ao atualizar usuário:', e.message)
-        }
-
+        res.json({ user: userAtualizado })
+    } catch (error) {
         if (uploadedImagePath) {
             await supabase.storage
                 .from('fotoPerfil')
                 .remove([uploadedImagePath])
         }
-        if (e instanceof Error) {
-            res.status(400).json({ errors: [e.message] })
-            return
-        }
+        next(error)
     }
 }
 
-// Funcionando pos alteracao
-export async function deleteUser(req: Request, res: Response): Promise<void> {
+const deleteUserParamsSchema = z.object({
+    email: z.string({
+        required_error: 'Email é obrigatório',
+        invalid_type_error: 'Email deve ser um texto',
+    }).email({
+        message: 'Deve ser um email válido',
+    }),
+})
+
+export const deleteUser: RequestHandler = async (req, res, next) => {
     try {
-        /*const { data: user, error: fetchError } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('email', req.params.email)
-            .single();
+        const { email } = deleteUserParamsSchema.parse(req.params)
 
-        if (fetchError || !user) {
-             res.status(400).json({ errors: ['Usuário não encontrado'] });
-             return;
-        }
-
-        const { error: deleteError } = await supabase
-            .from('usuarios')
-            .delete()
-            .eq('email', req.params.email);
-
-        if (deleteError) throw deleteError;
-
-         res.json({ message: 'Usuário deletado com sucesso' });
-         return;*/
         const user = await userPrismaRepository.findByEmail({
-            email: req.params.email,
+            email,
         })
 
         if (!user) {
@@ -273,14 +232,11 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
             return
         }
 
-        await userPrismaRepository.delete({ email: req.params.email })
+        await userPrismaRepository.delete({ email })
 
-        res.json({ message: 'Usuário deletado com sucesso' })
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(400).json({ errors: [e.message] })
-            return
-        }
+        res.status(204).send()
+    } catch (error) {
+        next(error)
     }
 }
 
@@ -328,58 +284,24 @@ export const loginUser: RequestHandler = async (req, res, next) => {
     }
 }
 
-export async function resetPasswordRequestUser(
-    req: Request,
-    res: Response,
-): Promise<void> {
-    const { email } = req.body
+const resetPasswordRequestSchema = z.object({
+    email: z.string({
+        required_error: 'Email é obrigatório',
+        invalid_type_error: 'Email deve ser um texto',
+    }).email({
+        message: 'Deve ser um email válido',
+    }),
+})
 
+export const resetPasswordRequestUser: RequestHandler = async (req, res, next) => {
     try {
-        /*const { data: user, error } = await supabase
-            .from('usuarios')
-            .select('email')
-            .eq('email', email)
-            .single();
-
-        if (error || !user) {
-            res.status(400).json({ error: 'Usuário não encontrado' });
-            return;
-        }
-
-        const token = jwt.sign(
-            { email: user.email },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '1h' }
-        );
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: 'Redefinição de Senha',
-            text: `Seu token de redefinição de senha é: ${token}`,
-            html: `<p>Seu token de redefinição de senha é:</p><p><strong>${token}</strong></p>`
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        res.status(200).json({ message: 'Token de redefinição de senha enviado com sucesso' });
-        return;*/
+        const { email } = resetPasswordRequestSchema.parse(req.body)
         const user = await userPrismaRepository.findByEmail({ email })
 
         if (!user) {
-            res.status(400).json({ error: 'Usuário não encontrado' })
+            res.status(404).json({ error: 'Usuário não encontrado' })
             return
         }
-
-        //console.log('chegou aq2');
 
         const token = jwt.sign(
             { email: user.email },
@@ -410,21 +332,28 @@ export async function resetPasswordRequestUser(
         res.status(200).json({
             message: 'Token de redefinição de senha enviado com sucesso',
         })
-    } catch (e) {
-        console.error(e)
-        res.status(500).json({ error: 'Erro interno do servidor' })
-        return
+    } catch (error) {
+        next(error)
     }
 }
 
-export async function resetPasswordUser(
-    req: Request,
-    res: Response,
-): Promise<void> {
-    const { token } = req.params
-    const { newPassword } = req.body
+const resetPasswordParamsSchema = z.object({
+    token: z.string({
+        required_error: 'Token é obrigatório',
+        invalid_type_error: 'Token deve ser um texto',
+    }),
+})
+const resetPasswordBodySchema = z.object({
+    newPassword: z.string({
+        required_error: 'Nova senha é obrigatória',
+        invalid_type_error: 'Nova senha deve ser um texto',
+    }).min(6, 'Nova senha deve ter pelo menos 6 caracteres').max(255, 'Nova senha deve ter no máximo 255 caracteres'),
+})
 
+export const resetPasswordUser: RequestHandler = async (req, res, next) => {
     try {
+        const { token } = resetPasswordParamsSchema.parse(req.params)
+        const { newPassword } = resetPasswordBodySchema.parse(req.body)
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
             email: string
         }
@@ -436,33 +365,16 @@ export async function resetPasswordUser(
 
         res.status(200).json({ message: 'Senha atualizada com sucesso' })
         return
-    } catch (e) {
-        /* if (error.name === 'TokenExpiredError') {
-             res.status(400).json({ error: 'Token expirado' });
-             return;
-         } 
-         
-         if (error.name === 'JsonWebTokenError') {
-             res.status(400).json({ error: 'Token inválido' });
-             return;
-         }
-     
-         console.error(e);
-         res.status(500).json({ error: 'Erro interno do servidor' });
-         return;*/
-
-        if (e instanceof jwt.TokenExpiredError) {
+    } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
             res.status(400).json({ error: 'Token expirado' })
             return
         }
-
-        if (e instanceof jwt.JsonWebTokenError) {
+        if (error instanceof jwt.JsonWebTokenError) {
             res.status(400).json({ error: 'Token inválido' })
             return
         }
-
-        console.error(e)
-        res.status(500).json({ error: 'Erro interno do servidor' })
+        next(error)
         return
     }
 }
@@ -484,9 +396,9 @@ async function uploadImage(file: Express.Multer.File) {
             .getPublicUrl(data.path)
 
         return { url: publicURL.publicUrl, path: data.path }
-    } catch (e) {
-        if (e instanceof Error) {
-            throw new Error(`Erro ao fazer upload da imagem: ${e.message}`)
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`Erro ao fazer upload da imagem: ${error.message}`)
         }
     }
 }
