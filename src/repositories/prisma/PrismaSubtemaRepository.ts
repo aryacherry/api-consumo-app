@@ -7,6 +7,14 @@ export class PrismaSubtemaRepository implements SubtemaRepository {
     constructor() {
         this.prisma = new PrismaClient();
     }
+    findByName({ nome }: Pick<subtemas, "nome">): Promise<subtemas | null> {
+        return this.prisma.subtemas.findFirst({
+            where: {
+                nome,
+            },
+        });
+    }
+
     findByTemaId({ tema_id }: Pick<subtemas, "tema_id">): Promise<subtemas[]> {
         return this.prisma.subtemas.findMany({
             where: {
