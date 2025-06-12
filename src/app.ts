@@ -25,7 +25,7 @@ const swaggerOptions = {
                 description: 'Ambiente Local backend',
             },
             {
-                url: 'https://api-app-seven-chi.vercel.app/',
+                url: 'https://api-consumo-app.onrender.com',
                 description: 'Ambiente de Produção',
             },
         ],
