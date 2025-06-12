@@ -56,7 +56,7 @@ const processFormData: RequestHandler = (req: Request, res: Response, next: Next
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -89,6 +89,8 @@ const processFormData: RequestHandler = (req: Request, res: Response, next: Next
  *         description: Receita criada com sucesso
  *       400:
  *         description: Erro ao criar a receita
+ *       500:
+ *         description: Erro interno do servidor
  */
 
 router.post('/receitas', processFormData, create);
@@ -104,6 +106,8 @@ router.post('/receitas', processFormData, create);
  *         description: Lista de receitas
  *       400:
  *         description: Erro ao listar as receitas
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/receitas', getAll);
 
@@ -123,8 +127,12 @@ router.get('/receitas', getAll);
  *     responses:
  *       200:
  *         description: Detalhes da receita
+ *       400:
+ *         description: Erro ao buscar a receita
  *       404:
  *         description: Receita não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/receitas/:id', getById);
 
@@ -144,7 +152,7 @@ router.get('/receitas/:id', getById);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -171,6 +179,8 @@ router.get('/receitas/:id', getById);
  *         description: Erro ao atualizar a receita
  *       404:
  *         description: Receita não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.put('/receitas/:id', processFormData, update);
 
@@ -190,8 +200,12 @@ router.put('/receitas/:id', processFormData, update);
  *     responses:
  *       200:
  *         description: Receita deletada com sucesso
+ *       400:
+ *         description: Erro ao deletar a receita
  *       404:
  *         description: Receita não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.delete('/receitas/:id', deletar);
 
@@ -215,6 +229,8 @@ router.delete('/receitas/:id', deletar);
  *         description: Erro ao verificar a receita
  *       404:
  *         description: Receita não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.patch('/receitas/:id/verificar', verify);
 
@@ -236,6 +252,8 @@ router.patch('/receitas/:id/verificar', verify);
  *         description: Lista de receitas por tema
  *       400:
  *         description: Erro ao listar receitas por tema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/:tema/receitas', getAllByTheme);
 
@@ -257,6 +275,8 @@ router.get('/:tema/receitas', getAllByTheme);
  *         description: Lista de receitas verificadas por tema
  *       400:
  *         description: Erro ao listar receitas verificadas por tema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/:tema/receitas/verificadas', getAllVerifiedByTheme);
 
@@ -278,6 +298,8 @@ router.get('/:tema/receitas/verificadas', getAllVerifiedByTheme);
  *         description: Lista de receitas não verificadas por tema
  *       400:
  *         description: Erro ao listar receitas não verificadas por tema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme);
 
@@ -305,6 +327,8 @@ router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme);
  *         description: Lista de receitas por tema e subtema
  *       400:
  *         description: Erro ao listar receitas por tema e subtema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/receitas/:tema/:subtema', getReceitasPorSubtemas);
 

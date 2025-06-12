@@ -25,12 +25,21 @@ const swaggerOptions = {
                 description: 'Ambiente Local backend',
             },
             {
-                url: 'https://api-app-seven-chi.vercel.app/',
+                url: 'https://api-consumo-app.onrender.com',
                 description: 'Ambiente de Produção',
             },
         ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
     },
-    apis: ['./src/routes/*.js'],
+    apis: ['./src/routes/*.ts'],
 };
 
 const CSS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css';

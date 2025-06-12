@@ -5,7 +5,6 @@ import authMiddleware from "../middlewares/authMiddleware";
  
 const router: Router = Router();
 
-
 /**
  * @swagger
  * /api/usuario:
@@ -15,7 +14,7 @@ const router: Router = Router();
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -151,6 +150,8 @@ router.post('/usuario/reset/:token', resetPasswordUser);
  *         description: Lista de usuários
  *       400:
  *         description: Erro ao buscar usuários
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/usuario', authMiddleware, indexUser);
 
@@ -174,6 +175,10 @@ router.get('/usuario', authMiddleware, indexUser);
  *         description: Informações do usuário
  *       404:
  *         description: Usuário não encontrado
+ *       400:
+ *         description: Erro ao buscar usuário
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/usuario/:email', authMiddleware, showUser);
 
@@ -193,7 +198,7 @@ router.get('/usuario/:email', authMiddleware, showUser);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -221,6 +226,8 @@ router.get('/usuario/:email', authMiddleware, showUser);
  *         description: Erro ao atualizar o usuário
  *       404:
  *         description: Usuário não encontrado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.put('/usuario/:email', authMiddleware, userUpload.single('fotoUsu'), updateUser);
 
@@ -246,6 +253,8 @@ router.put('/usuario/:email', authMiddleware, userUpload.single('fotoUsu'), upda
  *         description: Usuário não encontrado
  *       400:
  *         description: Erro ao deletar o usuário
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.delete('/usuario/:email', authMiddleware, deleteUser);
 
