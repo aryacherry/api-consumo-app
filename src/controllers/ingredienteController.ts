@@ -1,12 +1,31 @@
 import Ingrediente from '../models/Ingrediente'
 import { PrismaIngredienteRepository } from '../repositories/prisma/PrismaIngredienteRepository'
 import { supabase } from '../supabase/client'
-import type { Request, Response, RequestHandler } from 'express'
+import type { RequestHandler } from 'express'
+import { z } from 'zod'
 
+const storeSchema = z.object({
+    nomeIngrediente: z.string().min(1, 'O nome do ingrediente é obrigatório'),
+    quantidade: z.number({
+        invalid_type_error: 'A quantidade deve ser um número',
+        required_error: 'A quantidade é obrigatória',
+    }).min(1, 'A quantidade deve ser maior que 0'),
+    medida: z.string().min(1, 'A medida é obrigatória'),
+    receitaId: z.string({
+        invalid_type_error: 'O ID da receita deve ser uma string',
+        required_error: 'O ID da receita é obrigatório',
+    }).uuid('A receitaId deve ser um UUID válido'),
+})
 
-export const store: RequestHandler = async (req, res) => {
+export const store: RequestHandler = async (req, res, next) => {
     try {
-        const ingrediente = new Ingrediente(req.body)
+        const { nomeIngrediente, quantidade, medida, receitaId } = storeSchema.parse(req.body)
+
+        const ingrediente = new Ingrediente({
+            nomeIngrediente,
+            quantidade,
+            medida,
+        })
 
         const { valid, errors } = ingrediente.validate()
 
@@ -18,11 +37,7 @@ export const store: RequestHandler = async (req, res) => {
             return
         }
 
-        const { postagemId } = req.body
-
-        if (!postagemId) throw new Error('postagemId é obrigatório')
-
-        const { data, error } = await ingrediente.save(postagemId)
+        const { data, error } = await ingrediente.save(receitaId)
         if (error) {
             throw error
         }
@@ -33,68 +48,59 @@ export const store: RequestHandler = async (req, res) => {
                 data: data,
             })
         return
-    } catch (e) {
-        res.status(500).json({
-            message: 'Erro ao adicionar ingrediente',
-            error: String(e),
-        })
-        return
+    } catch (error) {
+        next(error)
     }
 }
 
-export const index: RequestHandler = async (_req, res) => {
+export const index: RequestHandler = async (_req, res, next) => {
     try {
-        /* const { data: ingredientes, error } = await supabase
-            .from('ingredientes')
-            .select('nomeingrediente, quantidade, medida');
-
-        if (error) throw error; */
         const ingredienteRepository = new PrismaIngredienteRepository()
         const ingredientes = await ingredienteRepository.findAll()
         res.json(ingredientes)
         return
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(500).json({
-                message: 'Erro ao listar ingredientes',
-                error: String(e),
-            })
-        }
+    } catch (error) {
+        next(error)
     }
 }
 
-export const show: RequestHandler = async (req: Request, res: Response) => {
+export const show: RequestHandler = async (req, res, next) => {
     try {
-        /* const { data: ingrediente, error } = await supabase
-            .from('ingredientes')
-            .select()
-            .eq('ingrediente_id', req.params.ingredienteId)
-            .single();
-
-        if (error || !ingrediente) {
-            handleError(res, `O ingrediente com o Id ${req.params.ingredienteId} não foi encontrado.`, 404, 'Ingrediente não encontrado')
-        } */
+        const { id } = req.params
         const ingredienteRepository = new PrismaIngredienteRepository()
-        const ingrediente = await ingredienteRepository.findById(
-            req.params.ingredienteId,
-        )
+        const ingrediente = await ingredienteRepository.findById(id)
+        if (!ingrediente) {
+            res.status(404).json({
+                message: `O ingrediente com o Id ${id} não foi encontrado.`,
+            })
+            return
+        }
         res.json(ingrediente)
         return
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(500).json({
-                message: 'Erro ao listar ingredientes',
-                error: String(e),
-            })
-        }
+    } catch (error) {
+        next(error)
     }
 }
 
-export const update = async (req: Request, res: Response) => {
+const updateSchema = z.object({
+    nomeIngrediente: z.string().min(1, 'O nome do ingrediente é obrigatório'),
+    quantidade: z.number({
+        invalid_type_error: 'A quantidade deve ser um número',
+        required_error: 'A quantidade é obrigatória',
+    }).min(1, 'A quantidade deve ser maior que 0'),
+    medida: z.string().min(1, 'A medida é obrigatória')
+})
+export const update: RequestHandler = async (req, res, next) => {
     try {
-        const updateIngrediente = new Ingrediente(req.body)
+        const { id } = req.params
+        const { nomeIngrediente, quantidade, medida } = updateSchema.parse(req.body)
 
-        const { valid, errors } = updateIngrediente.validate()
+        const ingrediente = new Ingrediente({
+            nomeIngrediente,
+            quantidade,
+            medida,
+        })
+        const { valid, errors } = ingrediente.validate()
 
         if (!valid) {
             res.status(400).json({
@@ -103,70 +109,50 @@ export const update = async (req: Request, res: Response) => {
             })
             return
         }
-        /* const { data: updatedIngrediente, error: updateError } = await supabase
-            .from('ingredientes')
-            .update([{
-                nomeIngrediente: updateIngrediente.nomeIngrediente,
-                quantidade: updateIngrediente.quantidade,
-                medida: updateIngrediente.medida,
-            }])
-            .eq('ingrediente_id', req.params.ingredienteId)
-            .select();
-
-        if (updateError) throw updateError; */
         const ingredienteRepository = new PrismaIngredienteRepository()
-        const updatedIngrediente = await ingredienteRepository.update(
-            req.params.ingredienteId,
-            {
-                nome: updateIngrediente.nomeIngrediente,
-                quantidade: updateIngrediente.quantidade.toString(),
-                medida: updateIngrediente.medida,
-            },
-        )
-
-        if (!updatedIngrediente) {
+        const existingIngrediente = await ingredienteRepository.findById(id)
+        if (!existingIngrediente) {
             res.status(404).json({
-                message: `O ingrediente com o Id ${req.params.ingredienteId} não foi encontrado.`,
+                message: `O ingrediente com o Id ${id} não foi encontrado.`,
             })
             return
         }
+        const updatedIngrediente = await ingredienteRepository.update(
+            id,
+            {
+                nome: ingrediente.nomeIngrediente,
+                quantidade: ingrediente.quantidade.toString(),
+                medida: ingrediente.medida,
+            },
+        )
         res
             .status(200)
             .json({
                 message: 'Ingrediente atualizado com sucesso',
-                data: updatedIngrediente,
+                ingrediente: updatedIngrediente,
             })
         return
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(500).json({
-                message: 'Erro ao atualizar ingrediente',
-                error: String(e),
-            })
-        }
+    } catch (error) {
+        next(error)
     }
 }
 
-export const deletar = async (req: Request, res: Response) => {
+export const deletar: RequestHandler = async (req, res, next) => {
     try {
-        /* const { data, error: deleteError } = await supabase
-            .from('ingredientes')
-            .delete()
-            .eq('ingrediente_id', req.params.ingredienteId)
-            .select();
-
-        if (deleteError) throw deleteError; */
+        const { id } = req.params
         const ingredienteRepository = new PrismaIngredienteRepository()
-        await ingredienteRepository.delete(req.params.ingredienteId)
+        const ingrediente = await ingredienteRepository.findById(id)
+        if (!ingrediente) {
+            res.status(404).json({
+                message: `O ingrediente com o Id ${id} não foi encontrado.`,
+            })
+            return
+        }
+        await ingredienteRepository.delete(id)
         res.status(204).end()
         return
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(500).json({
-                message: 'Erro ao deletar ingrediente',
-                error: String(e),
-            })
-        }
+    } catch (error) {
+        next(error)
     }
 }
 

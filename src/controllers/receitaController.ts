@@ -41,7 +41,7 @@ export const create: RequestHandler = async (req, res, next) => {
     try {
         const { titulo, conteudo, idUsuario, tema, subtemas } =
             receitaSchema.parse(req.body)
-        const files = req.files as Express.Multer.File[]
+        const files = req.files as Express.Multer.File[] | undefined
         const userRepository = new PrismaUsuarioRepository()
         const userExists = await userRepository.findByEmail({
             email: idUsuario,
@@ -81,7 +81,7 @@ export const create: RequestHandler = async (req, res, next) => {
             image_source: 'null',
         })
         const imageUrls: string[] = []
-        if (files.length === 0) {
+        if (!files || files.length === 0) {
             res.status(201).json({ receita: receitaCriada, fotos: [] })
             return
         }
@@ -202,7 +202,7 @@ export const update: RequestHandler = async (req, res, next) => {
         const { titulo, conteudo, ingredientes } =
             receitaUpdateSchema.parse(req.body)
         const { id } = req.params
-        const files = req.files as Express.Multer.File[]
+        const files = req.files as Express.Multer.File[] | undefined
 
         const receitaRepository = new PrismaReceitaRepository()
         const receita = await receitaRepository.findById(id)
@@ -216,7 +216,7 @@ export const update: RequestHandler = async (req, res, next) => {
             ...(ingredientes && ingredientes),
         })
 
-        if (files.length > 0) {
+        if (files && files.length > 0) {
             for (const file of files) {
                 const { error: uploadError } = await supabase.storage
                     .from('fotosReceitas')
