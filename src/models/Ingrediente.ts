@@ -1,4 +1,4 @@
-import {supabase} from "../supabase/client";
+import { supabase } from "../supabase/client";
 
 class Ingrediente {
 
@@ -46,7 +46,7 @@ class Ingrediente {
                     ingrediente: this.nomeIngrediente,
                     quantidade: this.quantidade,
                     medida: this.medida,
-                    postagemId: postagemId
+                    receita_id: postagemId
                 }
             ]);
 
