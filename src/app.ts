@@ -6,7 +6,10 @@ import swaggerUi from 'swagger-ui-express';
 import userRoutes from './routes/userRoutes';
 import dicasRoutes from './routes/dicaRoutes';
 import temaRoutes from './routes/temaRoutes';
-import ingredienteRoutes from './routes/ingredienteRoutes';
+import receitaRoutes from './routes/receitaRoutes';
+import ingredientesRoutes from './routes/ingredienteRoutes';
+import type { ErrorRequestHandler } from 'express';
+import { ZodError } from 'zod';
 
 const swaggerOptions = {
     definition: {
@@ -22,7 +25,7 @@ const swaggerOptions = {
                 description: 'Ambiente Local backend',
             },
             {
-                url: 'http s://api-app-seven-chi.vercel.app/',
+                url: 'https://api-app-seven-chi.vercel.app/',
                 description: 'Ambiente de Produção',
             },
         ],
@@ -43,13 +46,39 @@ app.use(express.json({ limit: '50mb' }));
 app.use(
     '/api-docs',
     swaggerUi.serve,
-    swaggerUi.setup(swaggerDocs)
+    swaggerUi.setup(swaggerDocs, {
+        customCss: `
+                    .swagger-ui .opblock .opblock-summary-path-description-wrapper {
+                        align-items: center;
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 0 10px;
+                        padding: 0 10px;
+                        width: 100%;
+                    }
+                `,
+        customCssUrl: CSS_URL,
+    })
 );
 
 
-app.use('/api/user', userRoutes);
-app.use('/api/dicas', dicasRoutes);
-app.use('/api/tema', temaRoutes);
-app.use('/api/ingredientes', ingredienteRoutes);
+app.use('/api', userRoutes);
+app.use('/api', dicasRoutes);
+app.use('/api', temaRoutes);
+app.use('/api', receitaRoutes);
+app.use('/api', ingredientesRoutes);
+
+app.use(<ErrorRequestHandler>((err, _req, res, _next) => {
+    console.error(err)
+    if (err instanceof ZodError) {
+        res.status(400).json({ error: err.issues })
+        return
+    }
+    if (err instanceof Error) {
+        res.status(400).json({ error: err.message })
+        return
+    }
+    res.status(500).json({ error: 'Erro interno no servidor' })
+}))
 
 export { app }
