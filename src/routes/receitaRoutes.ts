@@ -56,7 +56,7 @@ const processFormData: RequestHandler = (req: Request, res: Response, next: Next
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -152,7 +152,7 @@ router.get('/receitas/:id', getById);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
