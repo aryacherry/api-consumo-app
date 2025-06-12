@@ -74,7 +74,16 @@ export const storeUser: RequestHandler = async (req, res, next) => {
             foto_usuario: fotoUsuarioURL ?? '',
         })
 
-        res.status(201).json({ user: createdUser })
+        res.status(201).json({
+            user: {
+                email: createdUser.email,
+                nome: createdUser.nome,
+                telefone: createdUser.telefone,
+                nivel_consciencia: createdUser.nivel_consciencia,
+                is_monitor: createdUser.is_monitor,
+                foto_usuario: createdUser.foto_usuario,
+            }
+        })
         return
     } catch (error) {
         if (uploadedImagePath) {
@@ -205,7 +214,16 @@ export const updateUser: RequestHandler = async (req, res, next) => {
 
         const userAtualizado = await userPrismaRepository.updateOne(updatedDataFormatter)
 
-        res.json({ user: userAtualizado })
+        res.json({
+            user: {
+                email: userAtualizado.email,
+                nome: userAtualizado.nome,
+                telefone: userAtualizado.telefone,
+                nivel_consciencia: userAtualizado.nivel_consciencia,
+                is_monitor: userAtualizado.is_monitor,
+                foto_usuario: userAtualizado.foto_usuario,
+            }
+        })
     } catch (error) {
         if (uploadedImagePath) {
             await supabase.storage
