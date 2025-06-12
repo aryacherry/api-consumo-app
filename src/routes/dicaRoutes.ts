@@ -42,8 +42,11 @@ const processFormData = (req: Request, res: Response, next: NextFunction) => {
  *         description: Lista de dicas
  *       400:
  *         description: Erro ao listar as dicas
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/dicas', getAll);
+
 /**
  * @swagger
  * /api/dicas:
@@ -76,6 +79,8 @@ router.get('/dicas', getAll);
  *         description: Dica criada com sucesso
  *       400:
  *         description: Erro ao criar a dica
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.post('/dicas', authMiddleware, processFormData, create);
 
@@ -120,6 +125,8 @@ router.post('/dicas', authMiddleware, processFormData, create);
  *         description: Erro ao atualizar a dica
  *       404:
  *         description: Dica não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.put('/dicas/:id', authMiddleware, processFormData, update);
 
@@ -139,8 +146,12 @@ router.put('/dicas/:id', authMiddleware, processFormData, update);
  *     responses:
  *       200:
  *         description: Detalhes da dica
+ *       400:
+ *         description: Erro ao buscar a dica
  *       404:
  *         description: Dica não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/dicas/:id', getByCode);
 
@@ -162,8 +173,12 @@ router.get('/dicas/:id', getByCode);
  *     responses:
  *       200:
  *         description: Dica deletada com sucesso
+ *       400:
+ *         description: Erro ao deletar a dica
  *       404:
  *         description: Dica não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.delete('/dicas/:id', authMiddleware, deletar);
 
@@ -189,6 +204,8 @@ router.delete('/dicas/:id', authMiddleware, deletar);
  *         description: Erro ao verificar a dica
  *       404:
  *         description: Dica não encontrada
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.patch('/dicas/:id/verificar', authMiddleware, verify);
 
@@ -210,6 +227,8 @@ router.patch('/dicas/:id/verificar', authMiddleware, verify);
  *         description: Lista de dicas por tema
  *       400:
  *         description: Erro ao listar dicas por tema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/:tema/dicas', getAllByTheme);
 
@@ -231,6 +250,8 @@ router.get('/:tema/dicas', getAllByTheme);
  *         description: Lista de dicas verificadas por tema
  *       400:
  *         description: Erro ao listar dicas verificadas por tema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/:tema/dicas/verificadas', getAllVerifiedByTheme);
 
@@ -252,6 +273,8 @@ router.get('/:tema/dicas/verificadas', getAllVerifiedByTheme);
  *         description: Lista de dicas não verificadas por tema
  *       400:
  *         description: Erro ao listar dicas não verificadas por tema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/:tema/dicas/nao-verificadas', getAllNotVerifiedByTheme);
 
@@ -279,6 +302,8 @@ router.get('/:tema/dicas/nao-verificadas', getAllNotVerifiedByTheme);
  *         description: Lista de dicas por tema e subtema
  *       400:
  *         description: Erro ao listar dicas por tema e subtema
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/dicas/:tema/:subtema', getDica);
 
@@ -298,31 +323,11 @@ router.get('/dicas/:tema/:subtema', getDica);
  *     responses:
  *       200:
  *         description: Lista de dicas de especialistas por tema
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 # TODO: Defina aqui as propriedades de uma Dica
- *                 # Exemplo:
- *                 # properties:
- *                 #   id: 
- *                 #     type: integer
- *                 #   titulo:
- *                 #     type: string
  *       400:
  *         description: Erro ao listar dicas de especialistas
  *       500:
  *         description: Erro interno do servidor
- *       500:
- *         description: Erro interno do servidor
  */
-
-
 router.get('/:tema/dicas/especialistas', getSpecialistsDica);
 
 export default router;
-
-
-
