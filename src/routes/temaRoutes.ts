@@ -10,6 +10,8 @@ const router: Router = Router();
  *   get:
  *     summary: Lista todos os temas
  *     tags: [Tema]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de temas
@@ -28,6 +30,8 @@ router.get('/tema', authMiddleware, temaController.index);
  *   get:
  *     summary: Verifica se um tema existe por ID
  *     tags: [Tema]
+ *     security:
+ *      - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -53,6 +57,8 @@ router.get('/tema/:id', authMiddleware, temaController.checkIfExists);
  *   delete:
  *     summary: Remove um tema pelo ID
  *     tags: [Tema]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -76,6 +82,8 @@ router.delete('/tema/:id', authMiddleware, temaController.delete);
  *   get:
  *     summary: Lista subtemas de um tema
  *     tags: [Tema]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: tema

@@ -188,6 +188,8 @@ router.delete('/dicas/:id', authMiddleware, deletar);
  *   patch:
  *     summary: Verifica uma dica
  *     tags: [Dicas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
