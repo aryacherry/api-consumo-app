@@ -29,6 +29,20 @@ const swaggerOptions = {
                 description: 'Ambiente de Produção',
             },
         ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+        security: [
+            {
+                bearerAuth: [],
+            },
+        ]
     },
     apis: ['./src/routes/*.ts'],
 };
