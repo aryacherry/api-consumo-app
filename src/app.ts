@@ -7,6 +7,9 @@ import userRoutes from './routes/userRoutes';
 import dicasRoutes from './routes/dicaRoutes';
 import temaRoutes from './routes/temaRoutes';
 import receitaRoutes from './routes/receitaRoutes';
+import ingredientesRoutes from './routes/ingredienteRoutes';
+import type { ErrorRequestHandler } from 'express';
+import { ZodError } from 'zod';
 
 const swaggerOptions = {
     definition: {
@@ -63,6 +66,19 @@ app.use('/api', userRoutes);
 app.use('/api', dicasRoutes);
 app.use('/api', temaRoutes);
 app.use('/api', receitaRoutes);
-// this.app.use('/api', ingredientesRoutes);
+app.use('/api', ingredientesRoutes);
+
+app.use(<ErrorRequestHandler>((err, _req, res, _next) => {
+    console.error(err)
+    if (err instanceof ZodError) {
+        res.status(400).json({ error: err.issues })
+        return
+    }
+    if (err instanceof Error) {
+        res.status(400).json({ error: err.message })
+        return
+    }
+    res.status(500).json({ error: 'Erro interno no servidor' })
+}))
 
 export { app }

@@ -1,13 +1,12 @@
-/* import { Router } from 'express';
-import ingredienteController from '../controllers/ingredienteController.ts';
+import { Router } from 'express';
+import { deletar, index, show, store, update } from '../controllers/ingredienteController';
 
-const router = new Router();
+const router = Router();
 
-router.get('/ingredientes', ingredienteController.index);
-router.post('/ingredientes', ingredienteController.store);
-router.put('/ingredientes/:ingredienteId', ingredienteController.update);
-router.get('/ingredientes/:ingredienteId', ingredienteController.show);
-router.delete('/ingredientes/:ingredienteId', ingredienteController.delete);
+router.get('/ingredientes', index);
+router.post('/ingredientes', store);
+router.put('/ingredientes/:ingredienteId', update);
+router.get('/ingredientes/:ingredienteId', show);
+router.delete('/ingredientes/:ingredienteId', deletar);
 
 export default router;
- */

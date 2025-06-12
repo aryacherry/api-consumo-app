@@ -1,12 +1,14 @@
-import { Prisma, usuarios } from "../../generated/prisma/client";
+import type { Prisma, usuarios } from '../../generated/prisma/client'
 
 export interface UsuarioRepository {
-    findAll(): Promise<usuarios[]>;
-    findByEmail({ email }: Pick<usuarios, 'email'>): Promise<usuarios | null>;
-    getMonitorStatusByEmail({ email }: Pick<usuarios, 'email'>): Promise<boolean | null>;
+    findAll(): Promise<usuarios[]>
+    findByEmail({ email }: Pick<usuarios, 'email'>): Promise<usuarios | null>
+    getMonitorStatusByEmail({
+        email,
+    }: Pick<usuarios, 'email'>): Promise<boolean | null>
     create({
-        email, 
-        dicas, 
+        email,
+        dicas,
         foto_usuario,
         is_monitor,
         nivel_consciencia,
@@ -14,18 +16,27 @@ export interface UsuarioRepository {
         receitas,
         senha,
         telefone,
-        tokens
-    }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios>;
+        tokens,
+    }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios>
     updateOne({
-            email, 
-            foto_usuario,
-            is_monitor,
-            nivel_consciencia,
-            nome,
-            senha,
-            telefone,
-            tokens,
-        }: Required<Pick<usuarios, 'email'>> & usuarios): Promise<usuarios>;
-    delete({ email }: Pick<usuarios, 'email'>): Promise<void>;
-    updatePasswordByEmail(email: string, senha: string): Promise<void>;
+        email,
+        foto_usuario,
+        is_monitor,
+        nivel_consciencia,
+        nome,
+        senha,
+        telefone,
+        tokens,
+    }: {
+        email: usuarios['email']
+        foto_usuario?: usuarios['foto_usuario']
+        is_monitor?: usuarios['is_monitor']
+        nivel_consciencia?: usuarios['nivel_consciencia']
+        nome?: usuarios['nome']
+        senha?: usuarios['senha']
+        telefone?: usuarios['telefone']
+        tokens?: usuarios['tokens']
+    }): Promise<usuarios>
+    delete({ email }: Pick<usuarios, 'email'>): Promise<void>
+    updatePasswordByEmail(email: string, senha: string): Promise<void>
 }

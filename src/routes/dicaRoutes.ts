@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
-import dicaController from '../controllers/dicaController'; 
+import {
+    create, deletar, getAll,
+    getAllByTheme, getAllNotVerifiedByTheme, getAllVerifiedByTheme, getByCode, getDica, getSpecialistsDica, update, verify
+} from '../controllers/dicaController';
 import authMiddleware from '../middlewares/authMiddleware';
 import multer from 'multer';
 import type { Multer } from 'multer';
@@ -40,7 +43,7 @@ const processFormData = (req: Request, res: Response, next: NextFunction) => {
  *       400:
  *         description: Erro ao listar as dicas
  */
-router.get('/dicas', dicaController.getAll);
+router.get('/dicas', getAll);
 /**
  * @swagger
  * /api/dicas:
@@ -74,7 +77,7 @@ router.get('/dicas', dicaController.getAll);
  *       400:
  *         description: Erro ao criar a dica
  */
-router.post('/dicas', authMiddleware, processFormData, dicaController.create);
+router.post('/dicas', authMiddleware, processFormData, create);
 
 /**
  * @swagger
@@ -118,7 +121,7 @@ router.post('/dicas', authMiddleware, processFormData, dicaController.create);
  *       404:
  *         description: Dica não encontrada
  */
-router.put('/dicas/:id', authMiddleware, processFormData, dicaController.update);
+router.put('/dicas/:id', authMiddleware, processFormData, update);
 
 /**
  * @swagger
@@ -139,7 +142,7 @@ router.put('/dicas/:id', authMiddleware, processFormData, dicaController.update)
  *       404:
  *         description: Dica não encontrada
  */
-router.get('/dicas/:id', dicaController.getByCode);
+router.get('/dicas/:id', getByCode);
 
 /**
  * @swagger
@@ -162,7 +165,7 @@ router.get('/dicas/:id', dicaController.getByCode);
  *       404:
  *         description: Dica não encontrada
  */
-router.delete('/dicas/:id', authMiddleware, dicaController.delete);
+router.delete('/dicas/:id', authMiddleware, deletar);
 
 /**
  * @swagger
@@ -187,7 +190,7 @@ router.delete('/dicas/:id', authMiddleware, dicaController.delete);
  *       404:
  *         description: Dica não encontrada
  */
-router.patch('/dicas/:id/verificar', authMiddleware, dicaController.verify);
+router.patch('/dicas/:id/verificar', authMiddleware, verify);
 
 /**
  * @swagger
@@ -208,7 +211,7 @@ router.patch('/dicas/:id/verificar', authMiddleware, dicaController.verify);
  *       400:
  *         description: Erro ao listar dicas por tema
  */
-router.get('/:tema/dicas', dicaController.getAllByTheme);
+router.get('/:tema/dicas', getAllByTheme);
 
 /**
  * @swagger
@@ -229,7 +232,7 @@ router.get('/:tema/dicas', dicaController.getAllByTheme);
  *       400:
  *         description: Erro ao listar dicas verificadas por tema
  */
-router.get('/:tema/dicas/verificadas', dicaController.getAllVerifiedByTheme);
+router.get('/:tema/dicas/verificadas', getAllVerifiedByTheme);
 
 /**
  * @swagger
@@ -250,7 +253,7 @@ router.get('/:tema/dicas/verificadas', dicaController.getAllVerifiedByTheme);
  *       400:
  *         description: Erro ao listar dicas não verificadas por tema
  */
-router.get('/:tema/dicas/nao-verificadas', dicaController.getAllNotVerifiedByTheme);
+router.get('/:tema/dicas/nao-verificadas', getAllNotVerifiedByTheme);
 
 /**
  * @swagger
@@ -277,9 +280,9 @@ router.get('/:tema/dicas/nao-verificadas', dicaController.getAllNotVerifiedByThe
  *       400:
  *         description: Erro ao listar dicas por tema e subtema
  */
-router.get('/dicas/:tema/:subtema', dicaController.getDica);
+router.get('/dicas/:tema/:subtema', getDica);
 
-router.get('/:tema/dicas/especialistas', dicaController.getSpecialistsDica);
+router.get('/:tema/dicas/especialistas', getSpecialistsDica);
 
 export default router;
 
