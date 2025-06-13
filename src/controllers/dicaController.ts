@@ -63,6 +63,11 @@ const createBodySchema = z.object({
             })
             .min(1)
             .max(100),
+        {
+            required_error: 'O campo subtemas é obrigatório.',
+            invalid_type_error:
+                'O campo subtemas deve ser um array de strings.',
+        },
     ),
 })
 
