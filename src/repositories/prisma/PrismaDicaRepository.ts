@@ -1,44 +1,52 @@
-import { Prisma, PrismaClient, dicas, dicas_subtemas } from "../../../generated/prisma";
-import { DicaRepository } from "../DicaRepository";
+import type {
+    Prisma,
+    PrismaClient,
+    dicas,
+    dicas_subtemas,
+} from '../../../generated/prisma'
+import type { DicaRepository } from '../DicaRepository'
+import prisma from '../../db'
 
 export class PrismaDicaRepository implements DicaRepository {
-    private prisma: PrismaClient;
+    private prisma: PrismaClient
     constructor() {
-        this.prisma = new PrismaClient();
+        this.prisma = prisma
     }
-    findAllCreatedBySpecialist(specialistId: dicas["is_created_by_specialist"]): Promise<(dicas & { dicas_subtemas: dicas_subtemas[]; })[]> {
+    findAllCreatedBySpecialist(
+        specialistId: dicas['is_created_by_specialist'],
+    ): Promise<(dicas & { dicas_subtemas: dicas_subtemas[] })[]> {
         return this.prisma.dicas.findMany({
             where: {
-                is_created_by_specialist: specialistId
+                is_created_by_specialist: specialistId,
             },
             include: {
-                dicas_subtemas: true
-            }
-        });
+                dicas_subtemas: true,
+            },
+        })
     }
-    findAllByIsVerify(isVerify: dicas["is_verify"]) {
+    findAllByIsVerify(isVerify: dicas['is_verify']) {
         return this.prisma.dicas.findMany({
             where: {
-                is_verify: isVerify
+                is_verify: isVerify,
             },
             include: {
-                dicas_subtemas: true
-            }
-        });
+                dicas_subtemas: true,
+            },
+        })
     }
 
-    async delete(id: dicas["id"]) {
+    async delete(id: dicas['id']) {
         await this.prisma.dicas.delete({
-            where: { id }
-        });
+            where: { id },
+        })
     }
     async findById(id: dicas['id']) {
         return this.prisma.dicas.findUnique({
             where: { id },
             include: {
-                dicas_subtemas: true
-            }
-        });
+                dicas_subtemas: true,
+            },
+        })
     }
     async create({
         usuario_id,
@@ -49,7 +57,7 @@ export class PrismaDicaRepository implements DicaRepository {
         data_criacao,
         data_alteracao,
         is_verify,
-        is_created_by_specialist
+        is_created_by_specialist,
     }: Prisma.dicasUncheckedCreateInput): Promise<dicas> {
         return this.prisma.dicas.create({
             data: {
@@ -61,25 +69,24 @@ export class PrismaDicaRepository implements DicaRepository {
                 data_criacao,
                 data_alteracao,
                 is_created_by_specialist,
-                is_verify
-            }
-        });
+                is_verify,
+            },
+        })
     }
     async update(id: dicas['id'], dica: Prisma.dicasUncheckedUpdateInput) {
         return this.prisma.dicas.update({
             where: { id },
-            data: dica
-        });
+            data: dica,
+        })
     }
     async findAllWithCorrelacaoOrderById() {
         return this.prisma.dicas.findMany({
             orderBy: {
-                id: 'asc'
+                id: 'asc',
             },
             include: {
-                dicas_subtemas: true
-            }
-        });
+                dicas_subtemas: true,
+            },
+        })
     }
-
 }

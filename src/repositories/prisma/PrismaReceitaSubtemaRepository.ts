@@ -1,16 +1,17 @@
-import {
-    type Prisma,
+import type {
+    Prisma,
     PrismaClient,
-    type receitas_subtemas,
+    receitas_subtemas,
 } from '../../../generated/prisma'
 import type { ReceitaSubtemaRepository } from '../ReceitaSubtemaRepository'
+import prisma from '../../db'
 
 export class PrismaReceitaSubtemaRepository
     implements ReceitaSubtemaRepository {
     private prisma: PrismaClient
 
     constructor() {
-        this.prisma = new PrismaClient()
+        this.prisma = prisma
     }
 
     async delete(receita_id: string, subtema_id: string): Promise<void> {

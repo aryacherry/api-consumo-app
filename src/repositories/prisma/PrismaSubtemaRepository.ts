@@ -1,15 +1,12 @@
-import {
-    type Prisma,
-    PrismaClient,
-    type subtemas,
-} from '../../../generated/prisma'
+import type { Prisma, PrismaClient, subtemas } from '../../../generated/prisma'
 import type { SubtemaRepository } from '../SubtemaRepository'
+import prisma from '../../db'
 
 export class PrismaSubtemaRepository implements SubtemaRepository {
     private prisma: PrismaClient
 
     constructor() {
-        this.prisma = new PrismaClient()
+        this.prisma = prisma
     }
     findByName({ nome }: Pick<subtemas, 'nome'>): Promise<subtemas | null> {
         return this.prisma.subtemas.findFirst({
