@@ -15,13 +15,13 @@ const receitaSchema = z.object({
         required_error: 'O conteúdo é obrigatório',
         invalid_type_error: 'O conteúdo deve ser uma string',
     }),
-    idUsuario: z
+    email: z
         .string({
-            required_error: 'O ID do usuário é obrigatório',
-            invalid_type_error: 'O ID do usuário deve ser uma string',
+            required_error: 'O email do usuário é obrigatório',
+            invalid_type_error: 'O email do usuário deve ser uma string',
         })
-        .uuid({
-            message: 'O ID do usuário deve ser um UUID válido',
+        .email({
+            message: 'O email do usuário deve ser um email válido',
         }),
     tema: z.string({
         required_error: 'O tema é obrigatório',
@@ -39,12 +39,13 @@ const receitaSchema = z.object({
 })
 export const create: RequestHandler = async (req, res, next) => {
     try {
-        const { titulo, conteudo, idUsuario, tema, subtemas } =
-            receitaSchema.parse(req.body)
+        const { titulo, conteudo, email, tema, subtemas } = receitaSchema.parse(
+            req.body,
+        )
         const files = req.files as Express.Multer.File[] | undefined
         const userRepository = new PrismaUsuarioRepository()
         const userExists = await userRepository.findByEmail({
-            email: idUsuario,
+            email,
         })
         if (!userExists) {
             res.status(404).json({ error: 'Usuário não encontrado' })
@@ -131,8 +132,8 @@ export const getAll: RequestHandler = async (_req, res, next) => {
         const temaRepository = new PrismaTemaRepository()
         const subtemaRepository = new PrismaSubtemaRepository()
         const receitas = await receitaRepository.findAll()
-        const receitasFormatadas = await Promise.all(receitas.map(
-            async (receita) => {
+        const receitasFormatadas = await Promise.all(
+            receitas.map(async (receita) => {
                 const tema = await temaRepository.findById({
                     id: receita.tema_id,
                 })
@@ -144,7 +145,8 @@ export const getAll: RequestHandler = async (_req, res, next) => {
                     fotos = JSON.parse(
                         Buffer.from(receita.image_source, 'base64').toString(
                             'utf-8',
-                        ))
+                        ),
+                    )
                 } catch (_error) {
                     fotos = receita.image_source
                 }
@@ -159,8 +161,8 @@ export const getAll: RequestHandler = async (_req, res, next) => {
                     ingredientes: receita.ingredientes,
                     fotos,
                 }
-            },
-        ))
+            }),
+        )
         res.status(200).json({ receitas: receitasFormatadas })
         return
     } catch (error) {
@@ -199,8 +201,9 @@ const receitaUpdateSchema = z.object({
 export const update: RequestHandler = async (req, res, next) => {
     const imageUrls: string[] = []
     try {
-        const { titulo, conteudo, ingredientes } =
-            receitaUpdateSchema.parse(req.body)
+        const { titulo, conteudo, ingredientes } = receitaUpdateSchema.parse(
+            req.body,
+        )
         const { id } = req.params
         const files = req.files as Express.Multer.File[] | undefined
 
@@ -220,15 +223,21 @@ export const update: RequestHandler = async (req, res, next) => {
             for (const file of files) {
                 const { error: uploadError } = await supabase.storage
                     .from('fotosReceitas')
-                    .upload(`receitas/${receita.id}/${file.originalname}`, file.buffer, {
-                        contentType: file.mimetype,
-                    })
+                    .upload(
+                        `receitas/${receita.id}/${file.originalname}`,
+                        file.buffer,
+                        {
+                            contentType: file.mimetype,
+                        },
+                    )
 
                 if (uploadError) throw uploadError
 
                 const {
                     data: { publicUrl },
-                } = supabase.storage.from('fotosReceitas').getPublicUrl(file.originalname)
+                } = supabase.storage
+                    .from('fotosReceitas')
+                    .getPublicUrl(file.originalname)
 
                 const { error: fotoError } = await supabase
                     .from('fotosReceitas')
@@ -351,11 +360,7 @@ export const verify: RequestHandler = async (req, res, next) => {
     }
 }
 
-export const getAllVerifiedByTheme: RequestHandler = async (
-    req,
-    res,
-    next,
-) => {
+export const getAllVerifiedByTheme: RequestHandler = async (req, res, next) => {
     try {
         const { tema } = req.params
         const receitaRepository = new PrismaReceitaRepository()
@@ -519,7 +524,10 @@ export const getReceitasPorSubtemas: RequestHandler = async (
         const subtema = req.params.subtema.split(',')
         const receitaRepository = new PrismaReceitaRepository()
 
-        const receitas = await receitaRepository.getReceitasPorSubtemas(tema, subtema)
+        const receitas = await receitaRepository.getReceitasPorSubtemas(
+            tema,
+            subtema,
+        )
 
         const formatadas = receitas.map((receita) => {
             // Depois, analisar para ver se está tudo certo
