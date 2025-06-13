@@ -4,7 +4,7 @@ import type {
     PrismaClient,
     usuarios,
 } from '../../../generated/prisma/client'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaUsuarioRepository implements UsuarioRepository {
     private prisma: PrismaClient

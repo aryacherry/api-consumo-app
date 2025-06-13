@@ -4,7 +4,7 @@ import type {
     Prisma,
 } from '../../../generated/prisma'
 import type { IngredienteRepository } from '../IngredienteRepository'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaIngredienteRepository implements IngredienteRepository {
     private prisma: PrismaClient

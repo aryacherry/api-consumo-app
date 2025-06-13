@@ -1,6 +1,5 @@
 import Ingrediente from '../models/Ingrediente'
 import { PrismaIngredienteRepository } from '../repositories/prisma/PrismaIngredienteRepository'
-import { supabase } from '../supabase/client'
 import type { RequestHandler } from 'express'
 import { z } from 'zod'
 

@@ -6,7 +6,7 @@ import type {
     ingredientes,
 } from '../../../generated/prisma'
 import type { ReceitaRepository } from '../ReceitaRepository'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaReceitaRepository implements ReceitaRepository {
     private prisma: PrismaClient

@@ -4,7 +4,7 @@ import {
     dicas_subtemas,
 } from '../../../generated/prisma'
 import type { DicaSubtemaRepository } from '../DicaSubtemaRepository'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaDicaSubtemaRepository implements DicaSubtemaRepository {
     private prisma: PrismaClient

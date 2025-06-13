@@ -5,7 +5,7 @@ import type {
     temas,
 } from '../../../generated/prisma/client'
 import type { TemaRepository } from '../TemaRepository'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaTemaRepository implements TemaRepository {
     private prisma: PrismaClient

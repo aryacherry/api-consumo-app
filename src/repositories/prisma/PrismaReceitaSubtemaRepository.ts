@@ -4,7 +4,7 @@ import type {
     receitas_subtemas,
 } from '../../../generated/prisma'
 import type { ReceitaSubtemaRepository } from '../ReceitaSubtemaRepository'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaReceitaSubtemaRepository
     implements ReceitaSubtemaRepository {

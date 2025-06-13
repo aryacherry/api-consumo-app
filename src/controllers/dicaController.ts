@@ -1,6 +1,5 @@
-import type { RequestHandler, Response } from 'express'
+import type { RequestHandler } from 'express'
 import Dica from '../models/Dica'
-//import { supabase } from '../supabase/client';
 import Subtema from '../models/Subtemas'
 import { PrismaDicaRepository } from '../repositories/prisma/PrismaDicaRepository'
 import { PrismaDicaSubtemaRepository } from '../repositories/prisma/PrismaDicaSubtemaRepository'

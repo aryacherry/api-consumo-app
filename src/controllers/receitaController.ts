@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client'
+import { supabase } from '../db'
 import type { RequestHandler } from 'express'
 import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository'
 import { PrismaReceitaRepository } from '../repositories/prisma/PrismaReceitaRepository'

@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient, subtemas } from '../../../generated/prisma'
 import type { SubtemaRepository } from '../SubtemaRepository'
-import prisma from '../../db'
+import { prisma } from '../../db'
 
 export class PrismaSubtemaRepository implements SubtemaRepository {
     private prisma: PrismaClient

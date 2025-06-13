@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client'
+import { supabase } from '../db'
 import { v4 as uuidv4 } from 'uuid'
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
