@@ -1,16 +1,17 @@
-import {
-    type Prisma,
+import type {
+    Prisma,
     PrismaClient,
-    type subtemas,
-    type temas,
+    subtemas,
+    temas,
 } from '../../../generated/prisma/client'
 import type { TemaRepository } from '../TemaRepository'
+import { prisma } from '../../db'
 
 export class PrismaTemaRepository implements TemaRepository {
     private prisma: PrismaClient
 
     constructor() {
-        this.prisma = new PrismaClient()
+        this.prisma = prisma
     }
     create(data: Prisma.temasUncheckedCreateInput): Promise<temas> {
         return this.prisma.temas.create({

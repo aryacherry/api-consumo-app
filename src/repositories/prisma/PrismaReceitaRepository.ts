@@ -1,17 +1,18 @@
-import {
-    type receitas,
-    type receitas_subtemas,
-    type Prisma,
+import type {
+    receitas,
+    receitas_subtemas,
+    Prisma,
     PrismaClient,
-    type ingredientes,
+    ingredientes,
 } from '../../../generated/prisma'
 import type { ReceitaRepository } from '../ReceitaRepository'
+import { prisma } from '../../db'
 
 export class PrismaReceitaRepository implements ReceitaRepository {
     private prisma: PrismaClient
 
     constructor() {
-        this.prisma = new PrismaClient()
+        this.prisma = prisma
     }
 
     // Formata o resultado
@@ -56,7 +57,7 @@ export class PrismaReceitaRepository implements ReceitaRepository {
 
     async findById(id: string): Promise<receitas | null> {
         return this.prisma.receitas.findUnique({
-            where: { id }
+            where: { id },
         })
     }
 
@@ -74,9 +75,7 @@ export class PrismaReceitaRepository implements ReceitaRepository {
         })
     }
 
-    async findAllByTheme(
-        tema: string,
-    ): Promise<
+    async findAllByTheme(tema: string): Promise<
         (receitas & {
             receitas_subtemas: receitas_subtemas[]
             ingredientes: ingredientes[]
@@ -101,9 +100,7 @@ export class PrismaReceitaRepository implements ReceitaRepository {
         })
     }
 
-    async findAllVerifiedByTheme(
-        tema: string,
-    ): Promise<
+    async findAllVerifiedByTheme(tema: string): Promise<
         (receitas & {
             receitas_subtemas: receitas_subtemas[]
             ingredientes: ingredientes[]
@@ -128,9 +125,7 @@ export class PrismaReceitaRepository implements ReceitaRepository {
         })
     }
 
-    async findAllNotVerifiedByTheme(
-        tema: string,
-    ): Promise<
+    async findAllNotVerifiedByTheme(tema: string): Promise<
         (receitas & {
             receitas_subtemas: receitas_subtemas[]
             ingredientes: ingredientes[]

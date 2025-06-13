@@ -1,17 +1,29 @@
 import type { UsuarioRepository } from '../UsuarioRepository'
-import {
-    type Prisma,
+import type {
+    Prisma,
     PrismaClient,
-    type usuarios,
+    usuarios,
 } from '../../../generated/prisma/client'
+import { prisma } from '../../db'
 
 export class PrismaUsuarioRepository implements UsuarioRepository {
     private prisma: PrismaClient
 
     constructor() {
-        this.prisma = new PrismaClient()
+        this.prisma = prisma
     }
-    create({ email, dicas, foto_usuario, is_monitor, nivel_consciencia, nome, receitas, senha, telefone, tokens, }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios> {
+    create({
+        email,
+        dicas,
+        foto_usuario,
+        is_monitor,
+        nivel_consciencia,
+        nome,
+        receitas,
+        senha,
+        telefone,
+        tokens,
+    }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios> {
         return this.prisma.usuarios.create({
             data: {
                 email,
@@ -27,8 +39,6 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
             },
         })
     }
-
-
 
     async updateOne({
         email,
