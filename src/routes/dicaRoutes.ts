@@ -2,7 +2,9 @@ import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import {
     create, deletar, getAll,
-    getAllByTheme, getAllNotVerifiedByTheme, getAllVerifiedByTheme, getByCode, getDica, getSpecialistsDica, update, verify
+    getAllByTheme, getAllNotVerifiedByTheme,
+    getAllVerifiedByTheme, getByCode, getDicaByTemaAndSubtema,
+    getSpecialistsDica, update, verify
 } from '../controllers/dicaController';
 import authMiddleware from '../middlewares/authMiddleware';
 import multer from 'multer';
@@ -305,7 +307,7 @@ router.get('/:tema/dicas/nao-verificadas', getAllNotVerifiedByTheme);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/dicas/:tema/:subtema', getDica);
+router.get('/dicas/:tema/:subtema', getDicaByTemaAndSubtema);
 
 /**
  * @swagger

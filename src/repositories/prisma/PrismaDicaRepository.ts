@@ -12,6 +12,22 @@ export class PrismaDicaRepository implements DicaRepository {
     constructor() {
         this.prisma = prisma
     }
+    findAllByThemeAndSubtema(temaId: string, subtemaId: string): Promise<(dicas & { dicas_subtemas: dicas_subtemas[] })[]> {
+        return this.prisma.dicas.findMany({
+            where: {
+                tema_id: temaId,
+                dicas_subtemas: {
+                    some: {
+                        subtema_id: subtemaId,
+                    },
+                },
+            },
+            include: {
+                dicas_subtemas: true,
+            },
+        })
+    }
+
     findAllCreatedBySpecialist(
         specialistId: dicas['is_created_by_specialist'],
     ): Promise<(dicas & { dicas_subtemas: dicas_subtemas[] })[]> {

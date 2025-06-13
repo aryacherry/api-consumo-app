@@ -1,6 +1,4 @@
 import type { RequestHandler } from 'express'
-import Dica from '../models/Dica'
-import Subtema from '../models/Subtemas'
 import { PrismaDicaRepository } from '../repositories/prisma/PrismaDicaRepository'
 import { PrismaDicaSubtemaRepository } from '../repositories/prisma/PrismaDicaSubtemaRepository'
 import { PrismaSubtemaRepository } from '../repositories/prisma/PrismaSubtemaRepository'
@@ -154,10 +152,13 @@ export const getAll: RequestHandler = async (_req, res, next) => {
                 const tema = await temaRepository.findById({ id: dica.tema_id })
                 if (!tema) {
                     throw new Error(
-                        `Tema com ID ${dica.tema_id} não encontrado.`,)
+                        `Tema com ID ${dica.tema_id} não encontrado.`,
+                    )
                 }
                 const subtemaRepository = new PrismaSubtemaRepository()
-                const subtemas = await subtemaRepository.findByTemaId({ tema_id: tema.id })
+                const subtemas = await subtemaRepository.findByTemaId({
+                    tema_id: tema.id,
+                })
                 return {
                     id: dica.id,
                     titulo: dica.titulo,
@@ -182,10 +183,12 @@ export const getAll: RequestHandler = async (_req, res, next) => {
 }
 
 const getByCodeSchema = z.object({
-    id: z.string({
-        required_error: 'ID é obrigatório',
-        invalid_type_error: 'ID deve ser um UUID válido'
-    }).uuid('ID deve ser um UUID válido'),
+    id: z
+        .string({
+            required_error: 'ID é obrigatório',
+            invalid_type_error: 'ID deve ser um UUID válido',
+        })
+        .uuid('ID deve ser um UUID válido'),
 })
 export const getByCode: RequestHandler = async (req, res, next) => {
     try {
@@ -227,41 +230,34 @@ export const getByCode: RequestHandler = async (req, res, next) => {
     }
 }
 
+const updateBodySchema = z.object({
+    conteudo: z.string().min(10).max(1000),
+    titulo: z.string().min(3).max(500),
+    tema: z.string().min(1),
+    subtemas: z.array(z.string().min(1)).min(1),
+})
+const updateParamsSchema = z.object({
+    id: z.string().uuid('ID deve ser um UUID válido'),
+})
 export const update: RequestHandler = async (req, res, next) => {
     try {
-        const updatedDica = new Dica(req.body)
-        const { valid, errors } = updatedDica.validate()
-
-        if (!valid) {
-            res.status(400).json({
-                message: `Erro ao validar dica: ${errors?.join(', ')}`,
-            })
-            return
-        }
-
-        const tema = req.body.tema
-        const subtemas = req.body.subtemas
-
-        const subtemaObj = new Subtema(subtemas)
-        const resultadoSubtema = await subtemaObj.validate()
-
-        if (resultadoSubtema.erros.length > 0) {
-            res.status(400).json({
-                message: `Erro ao validar subtemas: ${resultadoSubtema.erros.join(', ')}`,
-            })
-            return
-        }
+        const { conteudo, titulo, tema, subtemas } = updateBodySchema.parse(
+            req.body,
+        )
+        const { id } = updateParamsSchema.parse(req.params)
 
         const dicaRepository = new PrismaDicaRepository()
-        const dicaAtualizada = await dicaRepository.update(req.params.id, {
-            conteudo: updatedDica.conteudo,
-        })
-        if (!dicaAtualizada) {
+        const dicaExists = await dicaRepository.findById(id)
+        if (!dicaExists) {
             res.status(404).json({
-                message: `Dica com o código ${req.params.id} não encontrada.`,
+                message: `Dica com o código ${id} não encontrada.`,
             })
             return
         }
+        const dicaAtualizada = await dicaRepository.update(id, {
+            conteudo,
+            titulo,
+        })
 
         const temaRepository = new PrismaTemaRepository()
         const temaExists = await temaRepository.findByName({ nome: tema })
@@ -271,12 +267,12 @@ export const update: RequestHandler = async (req, res, next) => {
             })
             return
         }
+        const subtemaRepository = new PrismaSubtemaRepository()
         for (const subtema of subtemas) {
             let subtemaData = await temaRepository.getSubtemasByTema({
                 temaId: temaExists.id,
             })
             if (!subtemaData || subtemaData.length === 0) {
-                const subtemaRepository = new PrismaSubtemaRepository()
                 const createdSubtema = await subtemaRepository.create({
                     tema_id: temaExists.id,
                     nome: subtema,
@@ -286,28 +282,25 @@ export const update: RequestHandler = async (req, res, next) => {
             }
             const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
             await dicaSubtemaRepository.create({
-                dica_id: req.params.id,
+                dica_id: id,
                 subtema_id: subtemaData[0].id,
                 assunto: '',
             })
         }
 
         const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const subtemasAtuais = await dicaSubtemaRepository.findByDicaId(
-            req.params.id,
-        )
+        const subtemasAtuais = await dicaSubtemaRepository.findByDicaId(id)
 
         const subtemasParaRemover = subtemasAtuais.filter(
             (subtemaAtual) => !subtemas.includes(subtemaAtual.subtema_id),
         )
 
         if (subtemasParaRemover.length > 0) {
-            await dicaSubtemaRepository.deleteMany(req.params.id)
+            await dicaSubtemaRepository.deleteMany(id)
         }
 
         res.status(200).json({
-            message: 'Dica e correlações atualizadas com sucesso',
-            data: dicaAtualizada,
+            dica: dicaAtualizada,
         })
         return
     } catch (error) {
@@ -315,13 +308,23 @@ export const update: RequestHandler = async (req, res, next) => {
     }
 }
 
+const deleteParamsSchema = z.object({
+    id: z.string().uuid('ID deve ser um UUID válido'),
+})
 export const deletar: RequestHandler = async (req, res, next) => {
     try {
-        const dicaId = req.params.id
+        const { id } = deleteParamsSchema.parse(req.params)
         const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        await dicaSubtemaRepository.deleteMany(req.params.id)
         const dicaRepository = new PrismaDicaRepository()
-        await dicaRepository.delete(dicaId)
+        const dicaExists = await dicaSubtemaRepository.findByDicaId(id)
+        if (!dicaExists) {
+            res.status(404).json({
+                message: `Dica com o código ${id} não encontrada.`,
+            })
+            return
+        }
+        await dicaSubtemaRepository.deleteMany(id)
+        await dicaRepository.delete(id)
         res.status(204).end()
         return
     } catch (error) {
@@ -329,29 +332,27 @@ export const deletar: RequestHandler = async (req, res, next) => {
     }
 }
 
+const verifyBodySchema = z.object({
+    verifyBy: z.string().email('Email inválido'),
+})
+const verifyParamsSchema = z.object({
+    id: z.string().uuid('ID deve ser um UUID válido'),
+})
 export const verify: RequestHandler = async (req, res, next) => {
     try {
-        const verifyBy = req.body.verifyBy
-        const id = req.params.id
-
-        if (!verifyBy) {
-            res.status(400).json({
-                message: 'O campo verifyBy é obrigatório.',
-            })
-            return
-        }
+        const { verifyBy } = verifyBodySchema.parse(req.body)
+        const { id } = verifyParamsSchema.parse(req.params)
 
         const usuarioRepository = new PrismaUsuarioRepository()
-        const user = await usuarioRepository.findByEmail(verifyBy)
-        if (!user) {
-            res.status(404).json({
-                message: `O usuário com o email ${verifyBy} não existe.`,
-            })
-            return
-        }
         const isMonitor = await usuarioRepository.getMonitorStatusByEmail({
             email: verifyBy,
         })
+        if (isMonitor === null) {
+            res.status(404).json({
+                message: `O usuário com o email ${verifyBy} não foi encontrado.`,
+            })
+            return
+        }
         if (!isMonitor) {
             res.status(403).json({
                 message: `O usuário com o email ${verifyBy} não tem permissão para verificar dicas.`,
@@ -367,13 +368,16 @@ export const verify: RequestHandler = async (req, res, next) => {
             })
             return
         }
-        await dicaRepository.update(id, {
+        const dicaUpdated = await dicaRepository.update(id, {
             is_verify: true,
             verify_by: verifyBy,
-            data_alteracao: new Date(),
         })
         res.status(200).json({
-            message: `A dica com o código ${id} foi verificada com sucesso pelo usuário com o email ${verifyBy}.`,
+            dica: {
+                id: dicaUpdated.id,
+                isVerify: dicaUpdated.is_verify,
+                verifyBy: dicaUpdated.verify_by,
+            },
         })
         return
     } catch (error) {
@@ -381,9 +385,12 @@ export const verify: RequestHandler = async (req, res, next) => {
     }
 }
 
+const getAllVerifiedByThemeParamsSchema = z.object({
+    tema: z.string().min(1),
+})
 export const getAllVerifiedByTheme: RequestHandler = async (req, res, next) => {
     try {
-        const { dicaId, tema } = req.params
+        const { tema } = getAllVerifiedByThemeParamsSchema.parse(req.params)
         const temaRepository = new PrismaTemaRepository()
         const temaExists = await temaRepository.findByName({
             nome: tema,
@@ -394,43 +401,50 @@ export const getAllVerifiedByTheme: RequestHandler = async (req, res, next) => {
             })
             return
         }
-        const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
-        if (!idPost) {
-            res.status(404).json({
-                message: 'Nenhuma receita encontrada',
-            })
-            return
-        }
         const dicaRepository = new PrismaDicaRepository()
-        const dicas = await dicaRepository.findAllByIsVerify(true)
+        const subtemaRepository = new PrismaSubtemaRepository()
+        const subtemas = (
+            await subtemaRepository.findByTemaId({ tema_id: temaExists.id })
+        ).map((subtema) => subtema.nome)
+        const dicas = (await dicaRepository.findAllByIsVerify(true)).filter(
+            (dica) => dica.tema_id === temaExists.id,
+        )
         const dicasComDetalhes = await Promise.all(
             dicas.map(async (dica) => {
                 return {
                     id: dica.id,
+                    usuarioId: dica.usuario_id,
                     titulo: dica.titulo,
                     conteudo: dica.conteudo,
                     isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
                     verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
+                    createdAt: dica.data_criacao,
+                    updatedAt: dica.data_alteracao,
+                    tema: temaExists.nome,
+                    subtemas,
                     isCreatedBySpecialist: dica.is_created_by_specialist,
                 }
             }),
         )
-        res.json(dicasComDetalhes)
+        res.status(200).json({
+            dicas: dicasComDetalhes,
+        })
         return
     } catch (error) {
         next(error)
     }
 }
 
-export const getAllNotVerifiedByTheme: RequestHandler = async (req, res, next) => {
+const getAllNotVerifiedByThemeParamsSchema = z.object({
+    tema: z.string().min(1),
+})
+export const getAllNotVerifiedByTheme: RequestHandler = async (
+    req,
+    res,
+    next,
+) => {
     try {
-        const { dicaId, tema } = req.params
+        const { tema } = getAllNotVerifiedByThemeParamsSchema.parse(req.params)
         const temaRepository = new PrismaTemaRepository()
         const temaExists = await temaRepository.findByName({ nome: tema })
         if (!temaExists) {
@@ -439,16 +453,14 @@ export const getAllNotVerifiedByTheme: RequestHandler = async (req, res, next) =
             })
             return
         }
-        const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
-        if (!idPost) {
-            res.status(404).json({
-                message: 'Nenhuma receita encontrada',
-            })
-            return
-        }
         const dicaRepository = new PrismaDicaRepository()
-        const dicas = await dicaRepository.findAllByIsVerify(false)
+        const subtemaRepository = new PrismaSubtemaRepository()
+        const subtemas = (
+            await subtemaRepository.findByTemaId({ tema_id: temaExists.id })
+        ).map((subtema) => subtema.nome)
+        const dicas = (await dicaRepository.findAllByIsVerify(false)).filter(
+            (dica) => dica.tema_id === temaExists.id,
+        )
         const dicasComDetalhes = await Promise.all(
             dicas.map(async (dica) => {
                 return {
@@ -456,25 +468,28 @@ export const getAllNotVerifiedByTheme: RequestHandler = async (req, res, next) =
                     titulo: dica.titulo,
                     conteudo: dica.conteudo,
                     isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
+                    usuarioId: dica.usuario_id,
                     verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
+                    createdAt: dica.data_criacao,
+                    updatedAt: dica.data_alteracao,
+                    tema: temaExists.nome,
+                    subtemas,
                     isCreatedBySpecialist: dica.is_created_by_specialist,
                 }
             }),
         )
-        res.json(dicasComDetalhes)
+        res.status(200).json({ dicas: dicasComDetalhes })
     } catch (error) {
         next(error)
     }
 }
 
+const getAllByThemeParamsSchema = z.object({
+    tema: z.string().min(1),
+})
 export const getAllByTheme: RequestHandler = async (req, res, next) => {
     try {
-        const { dicaId, tema } = req.params
+        const { tema } = getAllByThemeParamsSchema.parse(req.params)
         const temaRepository = new PrismaTemaRepository()
         const temaExists = await temaRepository.findByName({ nome: tema })
         if (!temaExists) {
@@ -483,16 +498,87 @@ export const getAllByTheme: RequestHandler = async (req, res, next) => {
             })
             return
         }
-        const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
-        if (!idPost) {
+        const dicaRepository = new PrismaDicaRepository()
+        const subtemaRepository = new PrismaSubtemaRepository()
+        const dicas = (
+            await dicaRepository.findAllWithCorrelacaoOrderById()
+        ).filter((dica) => dica.tema_id === temaExists.id)
+        const subtemas = (
+            await subtemaRepository.findByTemaId({ tema_id: temaExists.id })
+        ).map((subtema) => subtema.nome)
+        const dicasComDetalhes = await Promise.all(
+            dicas.map(async (dica) => {
+                return {
+                    id: dica.id,
+                    titulo: dica.titulo,
+                    conteudo: dica.conteudo,
+                    isVerify: dica.is_verify,
+                    usuarioId: dica.usuario_id,
+                    verifyBy: dica.verify_by,
+                    createdAt: dica.data_criacao,
+                    updatedAt: dica.data_alteracao,
+                    tema: temaExists.nome,
+                    subtemas,
+                    isCreatedBySpecialist: dica.is_created_by_specialist,
+                }
+            }),
+        )
+        res.json({ dicas: dicasComDetalhes })
+        return
+    } catch (error) {
+        next(error)
+    }
+}
+
+const getDicaByTemaAndSubtemaParamsSchema = z.object({
+    tema: z
+        .string({
+            required_error: 'O campo tema é obrigatório.',
+            invalid_type_error: 'O campo tema deve ser uma string.',
+        })
+        .min(1, {
+            message: 'O campo tema não pode estar vazio.',
+        }),
+    subtema: z.string({
+        required_error: 'O campo subtema é obrigatório.',
+        invalid_type_error: 'O campo subtema deve ser uma string.',
+    }),
+})
+export const getDicaByTemaAndSubtema: RequestHandler = async (
+    req,
+    res,
+    next,
+) => {
+    try {
+        const { tema, subtema } = getDicaByTemaAndSubtemaParamsSchema.parse(
+            req.params,
+        )
+        const temaRepository = new PrismaTemaRepository()
+        const temaExists = await temaRepository.findByName({ nome: tema })
+        if (!temaExists) {
             res.status(404).json({
-                message: 'Nenhuma receita encontrada',
+                message: `O tema ${tema} não existe.`,
+            })
+            return
+        }
+        const subtemaRepository = new PrismaSubtemaRepository()
+        const subtemaExists = await subtemaRepository.findByName({
+            nome: subtema,
+        })
+        if (!subtemaExists) {
+            res.status(404).json({
+                message: `O subtema ${subtema} não existe.`,
             })
             return
         }
         const dicaRepository = new PrismaDicaRepository()
-        const dicas = await dicaRepository.findAllWithCorrelacaoOrderById()
+        const dicas = await dicaRepository.findAllByThemeAndSubtema(
+            temaExists.id,
+            subtemaExists.id,
+        )
+        const subtemas = (
+            await subtemaRepository.findByTemaId({ tema_id: temaExists.id })
+        ).map((subtema) => subtema.nome)
         const dicasComDetalhes = await Promise.all(
             dicas.map(async (dica) => {
                 return {
@@ -500,73 +586,37 @@ export const getAllByTheme: RequestHandler = async (req, res, next) => {
                     titulo: dica.titulo,
                     conteudo: dica.conteudo,
                     isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
+                    usuarioId: dica.usuario_id,
                     verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
+                    createdAt: dica.data_criacao,
+                    updatedAt: dica.data_alteracao,
+                    tema: temaExists.nome,
+                    subtemas,
                     isCreatedBySpecialist: dica.is_created_by_specialist,
                 }
             }),
         )
-        res.json(dicasComDetalhes)
+
+        res.status(200).json({ dicas: dicasComDetalhes })
         return
     } catch (error) {
         next(error)
     }
 }
 
-export const getDica: RequestHandler = async (req, res, next) => {
-    try {
-        const dicaId = req.params.dicaId
-        const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const correlacoes = await dicaSubtemaRepository.findByDicaId(dicaId)
-
-        if (!correlacoes || correlacoes.length === 0) {
-            res.status(200).json([])
-            return
-        }
-
-        const idsDicas = [
-            ...new Set(correlacoes.map((correlacao) => correlacao.dica_id)),
-        ]
-        if (idsDicas.length === 0) {
-            res.status(200).json([])
-            return
-        }
-
-        const dicaRepository = new PrismaDicaRepository()
-        const dicas = await dicaRepository.findAllByIsVerify(true)
-
-        const dicasComDetalhes = await Promise.all(
-            dicas.map(async (dica) => {
-                return {
-                    id: dica.id,
-                    titulo: dica.titulo,
-                    conteudo: dica.conteudo,
-                    isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
-                    verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas?.[0]?.subtema_id || null,
-                    subtemas: Array.from(dica.dicas_subtemas),
-                    isCreatedBySpecialist: dica.is_created_by_specialist,
-                }
-            }),
-        )
-
-        res.json(dicasComDetalhes)
-        return
-    } catch (error) {
-        next(error)
-    }
-}
-
+const getSpecialistsDicaParamsSchema = z.object({
+    tema: z
+        .string({
+            required_error: 'O campo tema é obrigatório.',
+            invalid_type_error: 'O campo tema deve ser uma string.',
+        })
+        .min(1, {
+            message: 'O campo tema não pode estar vazio.',
+        }),
+})
 export const getSpecialistsDica: RequestHandler = async (req, res, next) => {
     try {
-        const { dicaId, tema } = req.params
+        const { tema } = getSpecialistsDicaParamsSchema.parse(req.params)
         const temaRepository = new PrismaTemaRepository()
         const temaExists = await temaRepository.findByName({ nome: tema })
         if (!temaExists) {
@@ -575,16 +625,14 @@ export const getSpecialistsDica: RequestHandler = async (req, res, next) => {
             })
             return
         }
-        const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const idPost = await dicaSubtemaRepository.findByDicaId(dicaId)
-        if (!idPost) {
-            res.status(404).json({
-                message: 'Nenhuma receita encontrada',
-            })
-            return
-        }
         const dicaRepository = new PrismaDicaRepository()
-        const dicas = await dicaRepository.findAllCreatedBySpecialist(true)
+        const dicas = (
+            await dicaRepository.findAllCreatedBySpecialist(true)
+        ).filter((dica) => dica.tema_id === temaExists.id)
+        const subtemaRepository = new PrismaSubtemaRepository()
+        const subtemas = (
+            await subtemaRepository.findByTemaId({ tema_id: temaExists.id })
+        ).map((subtema) => subtema.nome)
         const dicasComDetalhes = await Promise.all(
             dicas.map(async (dica) => {
                 return {
@@ -592,17 +640,17 @@ export const getSpecialistsDica: RequestHandler = async (req, res, next) => {
                     titulo: dica.titulo,
                     conteudo: dica.conteudo,
                     isVerify: dica.is_verify,
-                    idUsuario: dica.usuario_id,
+                    usuarioId: dica.usuario_id,
                     verifyBy: dica.verify_by,
-                    dataCriacao: dica.data_criacao,
-                    ultimaAlteracao: dica.data_alteracao,
-                    tema: dica.dicas_subtemas[0].subtema_id,
-                    subtemas: Array.from(dica.dicas_subtemas),
+                    createdAt: dica.data_criacao,
+                    updatedAt: dica.data_alteracao,
+                    tema: temaExists.nome,
+                    subtemas,
                     isCreatedBySpecialist: dica.is_created_by_specialist,
                 }
             }),
         )
-        res.json(dicasComDetalhes)
+        res.status(200).json({ dicas: dicasComDetalhes })
         return
     } catch (error) {
         next(error)
