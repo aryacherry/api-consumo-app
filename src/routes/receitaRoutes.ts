@@ -226,7 +226,7 @@ router.delete('/receitas/:id', deletar);
  *           type: string
  *         description: ID da receita
  *       - in: path
- *         name: verificar
+ *         name: verifyBy
  *         required: true
  *         schema:
  *           type: string
