@@ -236,7 +236,6 @@ router.delete('/receitas/:id', deletar);
  *         required: true
  *         schema:
  *           type: string
- *         description: Email do usuário que verifica a receita
  *     responses:
  *       200:
  *         description: Receita verificada com sucesso
