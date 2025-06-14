@@ -5,6 +5,8 @@ import { PrismaReceitaRepository } from '../repositories/prisma/PrismaReceitaRep
 import { PrismaSubtemaRepository } from '../repositories/prisma/PrismaSubtemaRepository'
 import { z } from 'zod'
 import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepository'
+import { StorageError } from '@supabase/storage-js'
+import { tryParseJson } from '../utils/tryParseJson'
 
 const receitaSchema = z.object({
     titulo: z.string({
@@ -38,11 +40,18 @@ const receitaSchema = z.object({
     ),
 })
 export const create: RequestHandler = async (req, res, next) => {
+    const imageUrls: string[] = []
     try {
         const { titulo, conteudo, email, tema, subtemas } = receitaSchema.parse(
             req.body,
         )
-        const files = req.files as Express.Multer.File[] | undefined
+        const { files } = req
+        if (files && !Array.isArray(files)) {
+            res.status(400).json({
+                error: 'Os arquivos devem estar em um array',
+            })
+            return
+        }
         const userRepository = new PrismaUsuarioRepository()
         const userExists = await userRepository.findByEmail({
             email,
@@ -60,6 +69,7 @@ export const create: RequestHandler = async (req, res, next) => {
             })
         }
         const subtemaRepository = new PrismaSubtemaRepository()
+        const subtemasFetched: string[] = []
         for (const subtema of subtemas) {
             let subtemaExists = await subtemaRepository.findByName({
                 nome: subtema,
@@ -71,6 +81,33 @@ export const create: RequestHandler = async (req, res, next) => {
                     descricao: `Subtema ${subtema} criado automaticamente`,
                 })
             }
+            subtemasFetched.push(subtemaExists.id)
+        }
+        if (files && files.length > 0) {
+            for (const file of files) {
+                const fileName = `${Date.now()}-${file.originalname}`
+                const { error: uploadError } = await supabase.storage
+                    .from('fotosReceitas')
+                    .upload(fileName, file.buffer, {
+                        contentType: file.mimetype,
+                    })
+
+                if (uploadError) {
+                    throw uploadError
+                }
+
+                const {
+                    data: { publicUrl },
+                } = supabase.storage
+                    .from('fotosReceitas')
+                    .getPublicUrl(fileName)
+                if (!publicUrl) {
+                    throw new StorageError(
+                        'Erro ao obter URL pública da imagem',
+                    )
+                }
+                imageUrls.push(publicUrl)
+            }
         }
         const receitaRepository = new PrismaReceitaRepository()
         const receitaCriada = await receitaRepository.create({
@@ -79,49 +116,42 @@ export const create: RequestHandler = async (req, res, next) => {
             usuario_id: userExists.id,
             tema_id: temaExists.id,
             is_verify: false,
-            image_source: 'null',
+            image_source: JSON.stringify(imageUrls),
+            receitas_subtemas: {
+                create: [
+                    ...subtemasFetched.map((subtemaId) => ({
+                        subtema_id: subtemaId,
+                        assunto: `Assunto relacionado ao subtema ${subtemaId}`,
+                    })),
+                ],
+            },
         })
-        const imageUrls: string[] = []
-        if (!files || files.length === 0) {
-            res.status(201).json({ receita: receitaCriada, fotos: [] })
-            return
-        }
-        for (const file of files) {
-            const fileName = `${receitaCriada.id}-${Date.now()}-${file.originalname}`
-            const { error: uploadError } = await supabase.storage
-                .from('fotosReceitas')
-                .upload(fileName, file.buffer, {
-                    contentType: file.mimetype,
-                })
-
-            if (uploadError) throw uploadError
-
-            const {
-                data: { publicUrl },
-            } = supabase.storage.from('fotosReceitas').getPublicUrl(fileName)
-
-            const { error: fotoError } = await supabase
-                .from('fotosReceitas')
-                .insert({
-                    idFoto: Date.now(),
-                    id: receitaCriada.id,
-                    url: publicUrl,
-                    createdAt: new Date().toISOString(),
-                })
-
-            if (fotoError) throw fotoError
-            imageUrls.push(publicUrl)
-        }
-
-        await receitaRepository.update(receitaCriada.id, {
-            image_source: Buffer.from(
-                JSON.stringify(imageUrls),
-                'utf-8',
-            ).toString('base64'),
+        const { image_source, ...propsOfReceita } = receitaCriada
+        res.status(201).json({
+            receita: {
+                ...propsOfReceita,
+                fotos: tryParseJson<string[]>(image_source),
+            },
         })
-        res.status(201).json({ receita: receitaCriada, fotos: imageUrls })
         return
     } catch (error) {
+        if (error instanceof StorageError) {
+            for (const url of imageUrls) {
+                const fileName: string | undefined = url
+                    .split('/fotosReceitas/')
+                    .pop()
+                if (fileName) {
+                    await supabase.storage
+                        .from('fotosReceitas')
+                        .remove([fileName])
+                }
+            }
+            console.error(error)
+            res.status(500).json({
+                error: 'Erro ao fazer upload das imagens',
+            })
+            return
+        }
         next(error)
     }
 }
@@ -205,67 +235,87 @@ export const update: RequestHandler = async (req, res, next) => {
             req.body,
         )
         const { id } = req.params
-        const files = req.files as Express.Multer.File[] | undefined
-
+        const { files } = req
+        if (files && !Array.isArray(files)) {
+            res.status(400).json({
+                error: 'Os arquivos devem estar em um array',
+            })
+            return
+        }
         const receitaRepository = new PrismaReceitaRepository()
         const receita = await receitaRepository.findById(id)
         if (!receita) {
             res.status(404).json({ error: 'Receita não encontrada' })
             return
         }
-        const receitasAtualizadas = await receitaRepository.update(id, {
-            titulo: titulo || receita.titulo,
-            conteudo: conteudo || receita.conteudo,
-            ...(ingredientes && ingredientes),
-        })
-
         if (files && files.length > 0) {
+            const fotosUrls = tryParseJson<string[]>(receita.image_source) || []
+            for (const url of fotosUrls) {
+                const fileName: string | undefined = url
+                    .split('/fotosReceitas/')
+                    .pop()
+                if (fileName) {
+                    await supabase.storage
+                        .from('fotosReceitas')
+                        .remove([fileName])
+                }
+            }
             for (const file of files) {
+                const fileName = `${Date.now()}-${file.originalname}`
                 const { error: uploadError } = await supabase.storage
                     .from('fotosReceitas')
-                    .upload(
-                        `receitas/${receita.id}/${file.originalname}`,
-                        file.buffer,
-                        {
-                            contentType: file.mimetype,
-                        },
-                    )
+                    .upload(fileName, file.buffer, {
+                        contentType: file.mimetype,
+                    })
 
-                if (uploadError) throw uploadError
+                if (uploadError) {
+                    throw uploadError
+                }
 
                 const {
                     data: { publicUrl },
                 } = supabase.storage
                     .from('fotosReceitas')
-                    .getPublicUrl(file.originalname)
+                    .getPublicUrl(fileName)
 
-                const { error: fotoError } = await supabase
-                    .from('fotosReceitas')
-                    .insert({
-                        idFoto: Date.now(),
-                        id: receita.id,
-                        url: publicUrl,
-                        createdAt: new Date().toISOString(),
-                    })
-
-                if (fotoError) throw fotoError
+                if (!publicUrl) {
+                    throw new StorageError(
+                        'Erro ao obter URL pública da imagem',
+                    )
+                }
                 imageUrls.push(publicUrl)
             }
-
-            await receitaRepository.update(receita.id, {
-                image_source: Buffer.from(
-                    JSON.stringify(imageUrls),
-                    'utf-8',
-                ).toString('base64'),
+        }
+        // Remove todos os ingredientes antigos antes de adicionar os novos
+        if (ingredientes) {
+            await receitaRepository.update(id, {
+                ingredientes: {
+                    deleteMany: {}, // Deleta todos os ingredientes associados à receita
+                },
             })
         }
+        const receitaAtualizada = await receitaRepository.update(id, {
+            titulo: titulo || receita.titulo,
+            conteudo: conteudo || receita.conteudo,
+            image_source: JSON.stringify(imageUrls),
+            ingredientes: {
+                create: ingredientes?.map((ingrediente) => ({
+                    nome: ingrediente.nome,
+                    quantidade: ingrediente.quantidade,
+                    medida: ingrediente.medida,
+                })),
+            },
+        })
+        const { image_source, ...propsOfReceita } = receitaAtualizada
         res.status(200).json({
-            receitas: receitasAtualizadas,
-            fotos: imageUrls,
+            receitas: {
+                ...propsOfReceita,
+                fotos: tryParseJson<string[]>(image_source) || [],
+            },
         })
         return
     } catch (error) {
-        if (imageUrls.length > 0) {
+        if (error instanceof StorageError) {
             for (const url of imageUrls) {
                 const fileName: string | undefined = url
                     .split('/fotosReceitas/')
@@ -276,6 +326,11 @@ export const update: RequestHandler = async (req, res, next) => {
                         .remove([fileName])
                 }
             }
+            console.error(error)
+            res.status(500).json({
+                error: 'Erro ao fazer upload das imagens',
+            })
+            return
         }
         next(error)
     }

@@ -16,7 +16,7 @@ export class PrismaReceitaRepository implements ReceitaRepository {
     }
 
     // Formata o resultado
-    async getAllDetails(): Promise<receitas[]> {
+    async getAllDetails() {
         // Busca todas as receitas no banco, ordenadas por data de criação (mais recentes primeiro)
         return await this.prisma.receitas.findMany({
             orderBy: {
@@ -61,12 +61,7 @@ export class PrismaReceitaRepository implements ReceitaRepository {
         })
     }
 
-    async findAll(): Promise<
-        (receitas & {
-            receitas_subtemas: receitas_subtemas[]
-            ingredientes: ingredientes[]
-        })[]
-    > {
+    async findAll() {
         return this.prisma.receitas.findMany({
             include: {
                 receitas_subtemas: true,
