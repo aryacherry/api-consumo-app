@@ -10,28 +10,41 @@ import { z } from 'zod'
 const userPrismaRepository = new PrismaUsuarioRepository()
 
 const storeUserSchema = z.object({
-    nome: z.string({
-        required_error: 'Nome é obrigatório',
-        invalid_type_error: 'Nome deve ser um texto',
-    }).min(3, 'Nome deve ter pelo menos 3 caracteres.').max(51, 'Nome deve ter no máximo 51 caracteres.'),
-    email: z.string({
-        required_error: 'Email é obrigatório',
-        invalid_type_error: 'Email deve ser um texto',
-    }).email({
-        message: 'Deve ser um email válido',
-    }),
-    telefone: z.string({
-        required_error: 'Telefone é obrigatório',
-        invalid_type_error: 'Telefone deve ser um texto',
-    }).regex(/^\+?[1-9]\d{1,14}$/, 'Número de telefone inválido'),
+    nome: z
+        .string({
+            required_error: 'Nome é obrigatório',
+            invalid_type_error: 'Nome deve ser um texto',
+        })
+        .min(3, 'Nome deve ter pelo menos 3 caracteres.')
+        .max(51, 'Nome deve ter no máximo 51 caracteres.'),
+    email: z
+        .string({
+            required_error: 'Email é obrigatório',
+            invalid_type_error: 'Email deve ser um texto',
+        })
+        .email({
+            message: 'Deve ser um email válido',
+        }),
+    telefone: z
+        .string({
+            required_error: 'Telefone é obrigatório',
+            invalid_type_error: 'Telefone deve ser um texto',
+        })
+        .regex(/^\+?[1-9]\d{1,14}$/, 'Número de telefone inválido'),
     tokens: z.string({
         required_error: 'Tokens é obrigatório',
         invalid_type_error: 'Tokens deve ser um texto',
     }),
-    senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.').max(255, 'A senha deve ter no máximo 255 caracteres.'),
-    nivelConsciencia: z.number().min(0, 'Nível de consciência deve ser pelo menos 0.').max(5, 'Nível de consciência deve ser no máximo 5.'),
+    senha: z
+        .string()
+        .min(6, 'A senha deve ter pelo menos 6 caracteres.')
+        .max(255, 'A senha deve ter no máximo 255 caracteres.'),
+    nivelConsciencia: z
+        .number()
+        .min(0, 'Nível de consciência deve ser pelo menos 0.')
+        .max(5, 'Nível de consciência deve ser no máximo 5.'),
     isMonitor: z.boolean(),
-    fotoUsu: z.string().url().optional()
+    fotoUsu: z.string().url().optional(),
 })
 
 export const storeUser: RequestHandler = async (req, res, next) => {
@@ -82,7 +95,7 @@ export const storeUser: RequestHandler = async (req, res, next) => {
                 nivel_consciencia: createdUser.nivel_consciencia,
                 is_monitor: createdUser.is_monitor,
                 foto_usuario: createdUser.foto_usuario,
-            }
+            },
         })
         return
     } catch (error) {
@@ -94,7 +107,6 @@ export const storeUser: RequestHandler = async (req, res, next) => {
         next(error)
     }
 }
-
 
 export const indexUser: RequestHandler = async (_req, res, next) => {
     try {
@@ -116,20 +128,18 @@ export const indexUser: RequestHandler = async (_req, res, next) => {
 }
 
 const showUserSchema = z.object({
-    email: z.string({
-        required_error: 'Email é obrigatório',
-        invalid_type_error: 'Email deve ser um texto',
-    }).email({
-        message: 'Deve ser um email válido',
-    }),
+    id: z
+        .string({
+            required_error: 'ID é obrigatório',
+            invalid_type_error: 'ID deve ser um texto',
+        })
+        .uuid('Deve ser um UUID válido'),
 })
 
 export const showUser: RequestHandler = async (req, res, next) => {
     try {
-        const { email } = showUserSchema.parse(req.params)
-        const user = await userPrismaRepository.findByEmail({
-            email,
-        })
+        const { id } = showUserSchema.parse(req.params)
+        const user = await userPrismaRepository.findById(id)
 
         if (!user) {
             res.status(404).json({ errors: ['Usuário não encontrado'] })
@@ -143,42 +153,54 @@ export const showUser: RequestHandler = async (req, res, next) => {
 }
 
 const updateUserBodySchema = z.object({
-    nome: z.string({
-        required_error: 'Nome é obrigatório',
-        invalid_type_error: 'Nome deve ser um texto',
-    })
+    nome: z
+        .string({
+            required_error: 'Nome é obrigatório',
+            invalid_type_error: 'Nome deve ser um texto',
+        })
         .min(3, 'Nome deve ter pelo menos 3 caracteres.')
         .max(51, 'Nome deve ter no máximo 51 caracteres.')
         .optional(),
-    telefone: z.string({
-        required_error: 'Telefone é obrigatório',
-        invalid_type_error: 'Telefone deve ser um texto',
-    }).regex(/^\+?[1-9]\d{1,14}$/, 'Número de telefone inválido').optional(),
-    senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.').max(255, 'A senha deve ter no máximo 255 caracteres.').optional(),
-    nivelConsciencia: z.number().min(0, 'Nível de consciência deve ser pelo menos 0.').max(5, 'Nível de consciência deve ser no máximo 5.').optional(),
+    telefone: z
+        .string({
+            required_error: 'Telefone é obrigatório',
+            invalid_type_error: 'Telefone deve ser um texto',
+        })
+        .regex(/^\+?[1-9]\d{1,14}$/, 'Número de telefone inválido')
+        .optional(),
+    senha: z
+        .string()
+        .min(6, 'A senha deve ter pelo menos 6 caracteres.')
+        .max(255, 'A senha deve ter no máximo 255 caracteres.')
+        .optional(),
+    nivelConsciencia: z
+        .number()
+        .min(0, 'Nível de consciência deve ser pelo menos 0.')
+        .max(5, 'Nível de consciência deve ser no máximo 5.')
+        .optional(),
     isMonitor: z.boolean().optional(),
-    fotoUsu: z.string().url().optional()
+    fotoUsu: z.string().url().optional(),
 })
 
 const updateUserParamsSchema = z.object({
-    email: z.string({
-        required_error: 'Email é obrigatório',
-        invalid_type_error: 'Email deve ser um texto',
-    }).email({
-        message: 'Deve ser um email válido',
-    }),
+    id: z
+        .string({
+            required_error: 'ID é obrigatório',
+            invalid_type_error: 'ID deve ser um texto',
+        })
+        .uuid({
+            message: 'Deve ser um UUID válido',
+        }),
 })
 
 export const updateUser: RequestHandler = async (req, res, next) => {
     let uploadedImagePath = null
 
     try {
-        const { email } = updateUserParamsSchema.parse(req.params)
+        const { id } = updateUserParamsSchema.parse(req.params)
         const updateDataParser = updateUserBodySchema.parse(req.body)
 
-        const user = await userPrismaRepository.findByEmail({
-            email,
-        })
+        const user = await userPrismaRepository.findById(id)
 
         if (!user) {
             res.status(400).json({ errors: ['Usuário não encontrado'] })
@@ -201,18 +223,25 @@ export const updateUser: RequestHandler = async (req, res, next) => {
         }
 
         const updatedDataFormatter = {
-            email,
+            id: user.id,
             ...(updateDataParser.nome && { nome: updateDataParser.nome }),
-            ...(updateDataParser.telefone !== undefined && { telefone: updateDataParser.telefone }),
+            ...(updateDataParser.telefone !== undefined && {
+                telefone: updateDataParser.telefone,
+            }),
             ...(updateDataParser.nivelConsciencia !== undefined && {
                 nivel_consciencia: String(updateDataParser.nivelConsciencia),
             }),
-            ...(updateDataParser.isMonitor !== undefined && { is_monitor: updateDataParser.isMonitor }),
-            ...(updateDataParser.senha && { senha: await argon2.hash(updateDataParser.senha.trim()) }), // A senha só será atualizada se for fornecida
+            ...(updateDataParser.isMonitor !== undefined && {
+                is_monitor: updateDataParser.isMonitor,
+            }),
+            ...(updateDataParser.senha && {
+                senha: await argon2.hash(updateDataParser.senha.trim()),
+            }), // A senha só será atualizada se for fornecida
             foto_usuario: fotoUsuarioURL,
         }
 
-        const userAtualizado = await userPrismaRepository.updateOne(updatedDataFormatter)
+        const userAtualizado =
+            await userPrismaRepository.updateOne(updatedDataFormatter)
 
         res.json({
             user: {
@@ -222,7 +251,7 @@ export const updateUser: RequestHandler = async (req, res, next) => {
                 nivel_consciencia: userAtualizado.nivel_consciencia,
                 is_monitor: userAtualizado.is_monitor,
                 foto_usuario: userAtualizado.foto_usuario,
-            }
+            },
         })
     } catch (error) {
         if (uploadedImagePath) {
@@ -235,28 +264,28 @@ export const updateUser: RequestHandler = async (req, res, next) => {
 }
 
 const deleteUserParamsSchema = z.object({
-    email: z.string({
-        required_error: 'Email é obrigatório',
-        invalid_type_error: 'Email deve ser um texto',
-    }).email({
-        message: 'Deve ser um email válido',
-    }),
+    id: z
+        .string({
+            required_error: 'ID é obrigatório',
+            invalid_type_error: 'ID deve ser um texto',
+        })
+        .uuid({
+            message: 'Deve ser um UUID válido',
+        }),
 })
 
 export const deleteUser: RequestHandler = async (req, res, next) => {
     try {
-        const { email } = deleteUserParamsSchema.parse(req.params)
+        const { id } = deleteUserParamsSchema.parse(req.params)
 
-        const user = await userPrismaRepository.findByEmail({
-            email,
-        })
+        const user = await userPrismaRepository.findById(id)
 
         if (!user) {
             res.status(400).json({ errors: ['Usuário não encontrado'] })
             return
         }
 
-        await userPrismaRepository.delete({ email })
+        await userPrismaRepository.delete({ id })
 
         res.status(204).send()
     } catch (error) {
@@ -309,15 +338,21 @@ export const loginUser: RequestHandler = async (req, res, next) => {
 }
 
 const resetPasswordRequestSchema = z.object({
-    email: z.string({
-        required_error: 'Email é obrigatório',
-        invalid_type_error: 'Email deve ser um texto',
-    }).email({
-        message: 'Deve ser um email válido',
-    }),
+    email: z
+        .string({
+            required_error: 'Email é obrigatório',
+            invalid_type_error: 'Email deve ser um texto',
+        })
+        .email({
+            message: 'Deve ser um email válido',
+        }),
 })
 
-export const resetPasswordRequestUser: RequestHandler = async (req, res, next) => {
+export const resetPasswordRequestUser: RequestHandler = async (
+    req,
+    res,
+    next,
+) => {
     try {
         const { email } = resetPasswordRequestSchema.parse(req.body)
         const user = await userPrismaRepository.findByEmail({ email })
@@ -368,10 +403,13 @@ const resetPasswordParamsSchema = z.object({
     }),
 })
 const resetPasswordBodySchema = z.object({
-    newPassword: z.string({
-        required_error: 'Nova senha é obrigatória',
-        invalid_type_error: 'Nova senha deve ser um texto',
-    }).min(6, 'Nova senha deve ter pelo menos 6 caracteres').max(255, 'Nova senha deve ter no máximo 255 caracteres'),
+    newPassword: z
+        .string({
+            required_error: 'Nova senha é obrigatória',
+            invalid_type_error: 'Nova senha deve ser um texto',
+        })
+        .min(6, 'Nova senha deve ter pelo menos 6 caracteres')
+        .max(255, 'Nova senha deve ter no máximo 255 caracteres'),
 })
 
 export const resetPasswordUser: RequestHandler = async (req, res, next) => {
