@@ -1,6 +1,6 @@
-import { RequestHandler } from 'express'
+import type { RequestHandler } from 'express'
 import { z } from 'zod'
-import { PrismaQuizRepository } from '../repositories/QuizRepository'
+import { PrismaQuizRepository } from '../repositories/prisma/PrismaQuizRepository'
 
 const quizRepository = new PrismaQuizRepository()
 
