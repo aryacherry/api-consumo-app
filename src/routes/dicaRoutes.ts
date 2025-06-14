@@ -209,10 +209,10 @@ router.delete('/dicas/:id', authMiddleware, deletar);
  *       content:
  *         application/json:
  *           schema:
- *           type: object
- *           properties:
- *             verifyBy:
- *               type: string
+ *             type: object
+ *             properties:
+ *               verifyBy:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Dica verificada com sucesso
