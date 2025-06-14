@@ -307,19 +307,29 @@ export const deletar: RequestHandler = async (req, res, next) => {
     }
 }
 
+const verifyBySchema = z.object({
+    id: z.string({
+        required_error: 'O parâmetro id é obrigatório',
+        invalid_type_error: 'O parâmetro id deve ser uma string',
+    }),
+    email: z
+        .string({
+            required_error: 'O parâmetro email é obrigatório',
+            invalid_type_error: 'O parâmetro email deve ser uma string',
+        })
+        .email({
+            message: 'O parâmetro email deve ser um email válido',
+    }),
+    verifyBy: z.string({
+        required_error: 'O parâmetro verifyBy é obrigatório',
+        invalid_type_error: 'O parâmetro verifyBy deve ser uma string',
+    }),
+})
 export const verify: RequestHandler = async (req, res, next) => {
     try {
         const receitaRepository = new PrismaReceitaRepository()
         const userRepository = new PrismaUsuarioRepository()
-        const { verifyBy } = req.params
-        const { id, email } = req.params
-
-        if (!verifyBy) {
-            res.status(400).json({
-                error: 'O parâmetro verifyBy é obrigatório',
-            })
-            return
-        }
+        const { id, email, verifyBy } = verifyBySchema.parse(req.params)
 
         const users = await userRepository.findByEmail({ email })
 

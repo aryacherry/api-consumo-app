@@ -214,7 +214,7 @@ router.delete('/receitas/:id', deletar);
 
 /**
  * @swagger
- * /api/receitas/{id}/{verificar}/{email}:
+ * /api/receitas/{id}/{verifyBy}/{email}:
  *   patch:
  *     summary: Verifica uma receita
  *     tags: [Receitas]
@@ -246,7 +246,7 @@ router.delete('/receitas/:id', deletar);
  *       500:
  *         description: Erro interno do servidor
  */
-router.patch('/receitas/:id/:verificar/:email', verify);
+router.patch('/receitas/:id/:verifyBy/:email', verify);
 
 /**
  * @swagger
