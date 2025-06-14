@@ -308,10 +308,6 @@ export const deletar: RequestHandler = async (req, res, next) => {
 }
 
 const verifyBySchema = z.object({
-    id: z.string({
-        required_error: 'O parâmetro id é obrigatório',
-        invalid_type_error: 'O parâmetro id deve ser uma string',
-    }),
     email: z
         .string({
             required_error: 'O parâmetro email é obrigatório',
@@ -320,36 +316,33 @@ const verifyBySchema = z.object({
         .email({
             message: 'O parâmetro email deve ser um email válido',
     }),
-    verifyBy: z.string({
-        required_error: 'O parâmetro verifyBy é obrigatório',
-        invalid_type_error: 'O parâmetro verifyBy deve ser uma string',
-    }),
 })
 export const verify: RequestHandler = async (req, res, next) => {
     try {
         const receitaRepository = new PrismaReceitaRepository()
         const userRepository = new PrismaUsuarioRepository()
-        const { id, email, verifyBy } = verifyBySchema.parse(req.params)
+        const { id } = req.params
+        const { email } = verifyBySchema.parse(req.body)
 
         const users = await userRepository.findByEmail({ email })
 
         if (!users) {
             res.status(404).json({
-                error: `O usuário com o email ${verifyBy} não foi encontrado.`,
+                error: `O usuário com o email ${email} não foi encontrado.`,
             })
             return
         }
 
         if (!users.is_monitor) {
             res.status(400).json({
-                error: `O usuário com o email ${verifyBy} não é um monitor.`,
+                error: `O usuário com o email ${email} não é um monitor.`,
             })
             return
         }
 
         const receitaAtualizada = await receitaRepository.update(id, {
             is_verify: true,
-            verify_by: verifyBy,
+            verify_by: email,
             data_alteracao: new Date(),
         })
 

@@ -214,7 +214,7 @@ router.delete('/receitas/:id', deletar);
 
 /**
  * @swagger
- * /api/receitas/{id}/{verifyBy}/{email}:
+ * /api/receitas/{id}/verificar:
  *   patch:
  *     summary: Verifica uma receita
  *     tags: [Receitas]
@@ -225,17 +225,17 @@ router.delete('/receitas/:id', deletar);
  *         schema:
  *           type: string
  *         description: ID da receita
- *       - in: path
- *         name: verifyBy
- *         required: true
- *         schema:
- *           type: string
- *         description: Email do usuário que está realizando a verificação
- *       - in: path
- *         name: email
- *         required: true
- *         schema:
- *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 required: true
+ *                 description: Email do usuário que está verificando a receita
  *     responses:
  *       200:
  *         description: Receita verificada com sucesso
@@ -246,7 +246,7 @@ router.delete('/receitas/:id', deletar);
  *       500:
  *         description: Erro interno do servidor
  */
-router.patch('/receitas/:id/:verifyBy/:email', verify);
+router.patch('/receitas/:id/verificar', verify);
 
 /**
  * @swagger
