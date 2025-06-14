@@ -348,7 +348,7 @@ router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme);
  *       400:
  *         description: Erro ao listar receitas por tema e subtema
  *       404:
- *         description: Nenhuma receita encontrada os subtemas especificados
+ *         description: Nenhuma receita encontrada para os subtemas especificados
  *       500:
  *         description: Erro interno do servidor
  */
