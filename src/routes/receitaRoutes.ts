@@ -1,8 +1,7 @@
-import express from 'express';
-import type { Router } from 'express';
-import type { NextFunction, Request, RequestHandler, Response } from 'express-serve-static-core';
-import multer from 'multer';
-import type { Multer } from 'multer';
+import type { Router } from 'express'
+import type { Multer } from 'multer'
+import express from 'express'
+import multer from 'multer'
 import {
     create,
     deletar,
@@ -13,37 +12,21 @@ import {
     getById,
     getReceitasPorSubtemas,
     update,
-    verify
-} from '../controllers/receitaController';
+    verify,
+} from '../controllers/receitaController'
 
-const router: Router = express.Router();
+const router: Router = express.Router()
 
+const storage = multer.memoryStorage()
 // Configuração do Multer
 const upload: Multer = multer({
-    storage: multer.memoryStorage(),
+    storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB
-    }
-});
+        fileSize: 5 * 1024 * 1024, // 5MB
+    },
+})
 
-// Middleware para processar form-data
-const processFormData: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-    upload.array('files', 8)(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({
-                message: 'Erro no upload',
-                detail: err.message
-            });
-        }
-        if (err) {
-            return res.status(500).json({
-                message: 'Erro',
-                detail: err.message
-            });
-        }
-        next();
-    });
-};
+const processFormData = upload.array('fotos', 8)
 
 // Rotas
 
@@ -72,13 +55,12 @@ const processFormData: RequestHandler = (req: Request, res: Response, next: Next
  *               tema:
  *                 required: true
  *                 type: string
- *                 description: Gastro, Moda, Enge, Veteri, Cosme
  *               subtema:
  *                 required: true
  *                 type: array
  *                 items:
  *                   type: string
- *               files:
+ *               fotos:
  *                 type: array
  *                 items:
  *                   type: string
@@ -94,7 +76,8 @@ const processFormData: RequestHandler = (req: Request, res: Response, next: Next
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/receitas', processFormData, create);
+
+router.post('/receitas', processFormData, create)
 
 /**
  * @swagger
@@ -110,7 +93,7 @@ router.post('/receitas', processFormData, create);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/receitas', getAll);
+router.get('/receitas', getAll)
 
 /**
  * @swagger
@@ -135,7 +118,7 @@ router.get('/receitas', getAll);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/receitas/:id', getById);
+router.get('/receitas/:id', getById)
 
 /**
  * @swagger
@@ -185,7 +168,7 @@ router.get('/receitas/:id', getById);
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/receitas/:id', processFormData, update);
+router.put('/receitas/:id', processFormData, update)
 
 /**
  * @swagger
@@ -210,7 +193,7 @@ router.put('/receitas/:id', processFormData, update);
  *       500:
  *         description: Erro interno do servidor
  */
-router.delete('/receitas/:id', deletar);
+router.delete('/receitas/:id', deletar)
 
 /**
  * @swagger
@@ -246,7 +229,7 @@ router.delete('/receitas/:id', deletar);
  *       500:
  *         description: Erro interno do servidor
  */
-router.patch('/receitas/:id/verificar', verify);
+router.patch('/receitas/:id/verificar', verify)
 
 /**
  * @swagger
@@ -271,7 +254,7 @@ router.patch('/receitas/:id/verificar', verify);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/:tema/receitas', getAllByTheme);
+router.get('/:tema/receitas', getAllByTheme)
 
 /**
  * @swagger
@@ -296,7 +279,7 @@ router.get('/:tema/receitas', getAllByTheme);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/:tema/receitas/verificadas', getAllVerifiedByTheme);
+router.get('/:tema/receitas/verificadas', getAllVerifiedByTheme)
 
 /**
  * @swagger
@@ -317,11 +300,11 @@ router.get('/:tema/receitas/verificadas', getAllVerifiedByTheme);
  *       400:
  *         description: Erro ao listar receitas não verificadas por tema
  *       404:
- *        description: Nenhuma receita não verificada encontrada para o tema 
+ *        description: Nenhuma receita não verificada encontrada para o tema
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme);
+router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme)
 
 /**
  * @swagger
@@ -352,6 +335,6 @@ router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/receitas/:tema/:subtema', getReceitasPorSubtemas);
+router.get('/receitas/:tema/:subtema', getReceitasPorSubtemas)
 
-export default router;
+export default router
