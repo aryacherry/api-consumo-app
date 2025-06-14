@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { destroy, index, show, store, update } from '../controllers/quizController';
+import { destroy, index, show, store, update, validateAnswer } from '../controllers/quizController';
 
 const router = Router();
 
@@ -154,4 +154,6 @@ router.put('/quizes/:id', update);
  */
 router.delete('/quizes/:id', destroy);
 
+
+router.post('/quizes/:id/validar', validateAnswer)
 export default router;

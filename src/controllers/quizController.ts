@@ -112,3 +112,29 @@ export const destroy: RequestHandler = async (req, res, next) => {
         next(error)
     }
 }
+
+export const validateAnswer: RequestHandler = async (req, res, next) => {   
+    try {
+        const { id } = req.params
+        const { resposta } = req.body
+
+        const quiz = await quizRepository.findById(id)
+
+        if (!quiz) {
+            res.status(404).json({
+                message: `O quiz com o Id ${id} não foi encontrado.`
+            })
+            return
+        }
+
+        const isCorrect = quiz.resposta_verdadeira === resposta
+
+        res.json({
+            message: isCorrect ? 'Resposta correta!' : 'Resposta incorreta.',
+            correctAnswer: quiz.resposta_verdadeira,
+            isCorrect
+        })
+    } catch (error) {
+        next(error)
+    }
+}
