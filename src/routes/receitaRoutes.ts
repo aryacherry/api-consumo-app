@@ -49,7 +49,7 @@ const processFormData = upload.array('fotos', 8)
  *               conteudo:
  *                 required: true
  *                 type: string
- *               usuarioId:
+ *               email:
  *                 required: true
  *                 type: string
  *               tema:
@@ -71,6 +71,8 @@ const processFormData = upload.array('fotos', 8)
  *         description: Receita criada com sucesso
  *       400:
  *         description: Erro ao criar a receita
+ *       404:
+ *         description: Usuário não encontrado
  *       500:
  *         description: Erro interno do servidor
  */
@@ -138,17 +140,19 @@ router.get('/receitas/:id', getById)
  *           schema:
  *             type: object
  *             properties:
- *               nome:
- *                 type: string
+ *               titulo:
+ *                  type: string
+ *                  required: true
+ *                  description: Título da receita
+ *               conteudo:
+ *                  type: string
+ *                  required: true
+ *                  description: Conteúdo da receita
  *               ingredientes:
  *                 type: string
- *               preparo:
- *                 type: string
- *               tempoPreparo:
- *                 type: integer
- *               categoria:
- *                 type: string
- *               fotos:
+ *                 required: true
+ *                 description: Ingredientes da receita
+ *               files:
  *                 type: array
  *                 items:
  *                   type: string
@@ -178,7 +182,7 @@ router.put('/receitas/:id', processFormData, update)
  *         required: true
  *         schema:
  *           type: string
- *         description: ID da receita
+ *           description: ID da receita
  *     responses:
  *       200:
  *         description: Receita deletada com sucesso
@@ -204,13 +208,24 @@ router.delete('/receitas/:id', deletar)
  *         schema:
  *           type: string
  *         description: ID da receita
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 required: true
+ *                 description: Email do usuário que está verificando a receita
  *     responses:
  *       200:
  *         description: Receita verificada com sucesso
  *       400:
- *         description: Erro ao verificar a receita
+ *         description: O usuário com esse email não é um monitor
  *       404:
- *         description: Receita não encontrada
+ *         description: O usuário com esse email não foi encontrado
  *       500:
  *         description: Erro interno do servidor
  */
@@ -234,6 +249,8 @@ router.patch('/receitas/:id/verificar', verify)
  *         description: Lista de receitas por tema
  *       400:
  *         description: Erro ao listar receitas por tema
+ *       404:
+ *         description: Nenhuma receita encontrada para o tema
  *       500:
  *         description: Erro interno do servidor
  */
@@ -257,6 +274,8 @@ router.get('/:tema/receitas', getAllByTheme)
  *         description: Lista de receitas verificadas por tema
  *       400:
  *         description: Erro ao listar receitas verificadas por tema
+ *       404:
+ *         description: Nenhuma receita verificada encontrada para o tema
  *       500:
  *         description: Erro interno do servidor
  */
@@ -280,6 +299,8 @@ router.get('/:tema/receitas/verificadas', getAllVerifiedByTheme)
  *         description: Lista de receitas não verificadas por tema
  *       400:
  *         description: Erro ao listar receitas não verificadas por tema
+ *       404:
+ *        description: Nenhuma receita não verificada encontrada para o tema
  *       500:
  *         description: Erro interno do servidor
  */
@@ -309,6 +330,8 @@ router.get('/:tema/receitas/nao-verificadas', getAllNotVerifiedByTheme)
  *         description: Lista de receitas por tema e subtema
  *       400:
  *         description: Erro ao listar receitas por tema e subtema
+ *       404:
+ *         description: Nenhuma receita encontrada para os subtemas especificados
  *       500:
  *         description: Erro interno do servidor
  */
