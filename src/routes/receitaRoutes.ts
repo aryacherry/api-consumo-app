@@ -230,6 +230,7 @@ router.delete('/receitas/:id', deletar);
  *         required: true
  *         schema:
  *           type: string
+ *         description: Email do usuário que está realizando a verificação
  *       - in: path
  *         name: email
  *         required: true
