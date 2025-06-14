@@ -54,7 +54,8 @@
     "nodemailer": "^6.9.16",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.2",
-    "uuid": "^11.0.0"
+    "uuid": "^11.0.0",
+    "zod": "^3.25.64"
   },
   "jest": {
     "transform": {}
