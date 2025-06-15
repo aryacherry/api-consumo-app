@@ -1,11 +1,11 @@
 import { supabase } from '../db'
-import { v4 as uuidv4 } from 'uuid'
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
 import type { RequestHandler } from 'express'
 import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository'
 import { z } from 'zod'
+import { randomUUID } from 'node:crypto'
 
 const BUCKET_NAME = 'photos'
 const FOLDER_NAME = 'fotoPerfil'
@@ -445,7 +445,7 @@ export const resetPasswordUser: RequestHandler = async (req, res, next) => {
 
 async function uploadImage(file: Express.Multer.File) {
     try {
-        const uniqueFileName = `${uuidv4()}-${file.originalname}`
+        const uniqueFileName = `${randomUUID()}-${Date.now()}`
         const { data, error } = await supabase.storage
             .from(BUCKET_NAME)
             .upload(`${FOLDER_NAME}/${uniqueFileName}`, file.buffer, {
