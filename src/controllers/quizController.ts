@@ -127,7 +127,36 @@ export const validateAnswer: RequestHandler = async (req, res, next) => {
             return
         }
 
-        const isCorrect = quiz.resposta_verdadeira === resposta
+        // Função para normalizar as strings antes da comparação
+        const normalizeAnswer = (str: string) => 
+            str
+                .normalize('NFD')                      // Normaliza caracteres acentuados
+                .replace(/\s+/g, ' ')                  // Converte múltiplos espaços em um só
+                .replace(/[.,;:!?]$/g, '')             // Remove pontuação final comum
+                .trim()
+                .toLowerCase()
+
+        
+        const opcoes = quiz.descricao.split('\n').map(opcao => opcao.trim())
+
+        
+        const respostaNum = Number(resposta)
+
+        if (
+            !Number.isInteger(respostaNum) ||
+            respostaNum < 1 ||
+            respostaNum > opcoes.length
+        ) {
+            res.status(400).json({
+                message: `Resposta inválida. Por favor, envie um número entre 1 e ${opcoes.length}`,
+                opcoes: opcoes.map((op, i) => ({ numero: i + 1, texto: op }))
+            })
+            return
+        }
+
+        const respostaEscolhida = opcoes[respostaNum - 1]
+
+        const isCorrect = normalizeAnswer(respostaEscolhida) === normalizeAnswer(quiz.resposta_verdadeira)
 
         res.json({
             message: isCorrect ? 'Resposta correta!' : 'Resposta incorreta.',
