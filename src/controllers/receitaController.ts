@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepository'
 import { StorageError } from '@supabase/storage-js'
 import { tryParseJson } from '../utils/tryParseJson'
+import { randomUUID } from 'node:crypto'
 
 const BUCKET_NAME = 'photos'
 const FOLDER_NAME = 'fotosReceitas'
@@ -88,7 +89,7 @@ export const create: RequestHandler = async (req, res, next) => {
         }
         if (files && files.length > 0) {
             for (const file of files) {
-                const fileName = `${Date.now()}-${file.originalname}`
+                const fileName = `${randomUUID()}-${Date.now()}`
                 const { error: uploadError } = await supabase.storage
                     .from(BUCKET_NAME)
                     .upload(`${FOLDER_NAME}/${fileName}`, file.buffer, {
@@ -264,7 +265,7 @@ export const update: RequestHandler = async (req, res, next) => {
                 }
             }
             for (const file of files) {
-                const fileName = `${Date.now()}-${file.originalname}`
+                const fileName = `${randomUUID()}-${Date.now()}`
                 const { error: uploadError } = await supabase.storage
                     .from(BUCKET_NAME)
                     .upload(`${FOLDER_NAME}/${fileName}`, file.buffer, {
