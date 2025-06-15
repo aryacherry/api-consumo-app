@@ -272,9 +272,10 @@ export const update: RequestHandler = async (req, res, next) => {
             const subtemaRepository = new PrismaSubtemaRepository()
             const subtemas_id: string[] = []
             for (const subtema of subtemas) {
-                const subtemaData = await subtemaRepository.findByName({
-                    nome: subtema,
-                })
+                const subtemaData = await subtemaRepository.findByTemaIdAndName(
+                    temaExists.id,
+                    subtema,
+                )
                 if (!subtemaData) {
                     const createdSubtema = await subtemaRepository.create({
                         tema_id: temaExists.id,
