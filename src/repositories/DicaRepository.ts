@@ -1,16 +1,27 @@
 import type { dicas, dicas_subtemas, Prisma } from '../../generated/prisma'
 
 export interface DicaRepository {
-    findById(id: dicas['id']): Promise<dicas | null>
+    findById(id: string): Promise<dicas | null>
     create(data: Prisma.dicasUncheckedCreateInput): Promise<dicas>
     update(
-        id: dicas['id'],
+        id: string,
         dica: Prisma.dicasUncheckedUpdateInput,
-    ): Promise<dicas>
+    ): Promise<
+        Prisma.dicasGetPayload<{
+            select: {
+                id: true
+                titulo: true
+                conteudo: true
+                is_verify: true
+                verify_by: true
+                is_created_by_specialist: true
+            }
+        }>
+    >
     findAllWithCorrelacaoOrderById(): Promise<
         (dicas & { dicas_subtemas: dicas_subtemas[] })[]
     >
-    delete(id: dicas['id']): Promise<void>
+    delete(id: string): Promise<void>
     findAllByIsVerify(
         isVerify: dicas['is_verify'],
     ): Promise<(dicas & { dicas_subtemas: dicas_subtemas[] })[]>
