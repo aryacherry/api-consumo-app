@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
 
 const BUCKET_NAME = 'photos'
-const FOLDER_NAME = 'fotoPerfil'
+const FOLDER_NAME = 'fotosPerfil'
 const userPrismaRepository = new PrismaUsuarioRepository()
 
 const storeUserSchema = z.object({
