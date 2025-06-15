@@ -12,6 +12,11 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     constructor() {
         this.prisma = prisma
     }
+    findById(id: string): Promise<usuarios | null> {
+        return this.prisma.usuarios.findUnique({
+            where: { id },
+        })
+    }
     create({
         email,
         dicas,
@@ -41,7 +46,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     }
 
     async updateOne({
-        email,
+        id,
         foto_usuario,
         is_monitor,
         nivel_consciencia,
@@ -50,7 +55,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         telefone,
         tokens,
     }: {
-        email: usuarios['email']
+        id: usuarios['id']
         foto_usuario?: usuarios['foto_usuario']
         is_monitor?: usuarios['is_monitor']
         nivel_consciencia?: usuarios['nivel_consciencia']
@@ -60,7 +65,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         tokens?: usuarios['tokens']
     }): Promise<usuarios> {
         return this.prisma.usuarios.update({
-            where: { email },
+            where: { id },
             data: {
                 ...(foto_usuario !== undefined && { foto_usuario }),
                 ...(is_monitor !== undefined && { is_monitor }),
@@ -80,9 +85,9 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         })
     }
 
-    async delete({ email }: Pick<usuarios, 'email'>) {
+    async delete({ id }: Pick<usuarios, 'id'>) {
         await this.prisma.usuarios.delete({
-            where: { email },
+            where: { id },
         })
     }
 

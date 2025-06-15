@@ -8,6 +8,9 @@ import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepositor
 import { StorageError } from '@supabase/storage-js'
 import { tryParseJson } from '../utils/tryParseJson'
 
+const BUCKET_NAME = 'photos'
+const FOLDER_NAME = 'fotosReceitas'
+
 const receitaSchema = z.object({
     titulo: z.string({
         required_error: 'O título é obrigatório',
@@ -87,8 +90,8 @@ export const create: RequestHandler = async (req, res, next) => {
             for (const file of files) {
                 const fileName = `${Date.now()}-${file.originalname}`
                 const { error: uploadError } = await supabase.storage
-                    .from('fotosReceitas')
-                    .upload(fileName, file.buffer, {
+                    .from(BUCKET_NAME)
+                    .upload(`${FOLDER_NAME}/${fileName}`, file.buffer, {
                         contentType: file.mimetype,
                     })
 
@@ -99,8 +102,8 @@ export const create: RequestHandler = async (req, res, next) => {
                 const {
                     data: { publicUrl },
                 } = supabase.storage
-                    .from('fotosReceitas')
-                    .getPublicUrl(fileName)
+                    .from(BUCKET_NAME)
+                    .getPublicUrl(`${FOLDER_NAME}/${fileName}`)
                 if (!publicUrl) {
                     throw new StorageError(
                         'Erro ao obter URL pública da imagem',
@@ -138,12 +141,12 @@ export const create: RequestHandler = async (req, res, next) => {
         if (error instanceof StorageError) {
             for (const url of imageUrls) {
                 const fileName: string | undefined = url
-                    .split('/fotosReceitas/')
+                    .split(`/${FOLDER_NAME}/`)
                     .pop()
                 if (fileName) {
                     await supabase.storage
-                        .from('fotosReceitas')
-                        .remove([fileName])
+                        .from(BUCKET_NAME)
+                        .remove([`${FOLDER_NAME}/${fileName}`])
                 }
             }
             console.error(error)
@@ -252,19 +255,19 @@ export const update: RequestHandler = async (req, res, next) => {
             const fotosUrls = tryParseJson<string[]>(receita.image_source) || []
             for (const url of fotosUrls) {
                 const fileName: string | undefined = url
-                    .split('/fotosReceitas/')
+                    .split(`/${FOLDER_NAME}/`)
                     .pop()
                 if (fileName) {
                     await supabase.storage
-                        .from('fotosReceitas')
-                        .remove([fileName])
+                        .from(BUCKET_NAME)
+                        .remove([`${FOLDER_NAME}/${fileName}`])
                 }
             }
             for (const file of files) {
                 const fileName = `${Date.now()}-${file.originalname}`
                 const { error: uploadError } = await supabase.storage
-                    .from('fotosReceitas')
-                    .upload(fileName, file.buffer, {
+                    .from(BUCKET_NAME)
+                    .upload(`${FOLDER_NAME}/${fileName}`, file.buffer, {
                         contentType: file.mimetype,
                     })
 
@@ -275,8 +278,8 @@ export const update: RequestHandler = async (req, res, next) => {
                 const {
                     data: { publicUrl },
                 } = supabase.storage
-                    .from('fotosReceitas')
-                    .getPublicUrl(fileName)
+                    .from(BUCKET_NAME)
+                    .getPublicUrl(`${FOLDER_NAME}/${fileName}`)
 
                 if (!publicUrl) {
                     throw new StorageError(
@@ -318,12 +321,12 @@ export const update: RequestHandler = async (req, res, next) => {
         if (error instanceof StorageError) {
             for (const url of imageUrls) {
                 const fileName: string | undefined = url
-                    .split('/fotosReceitas/')
+                    .split(`/${FOLDER_NAME}/`)
                     .pop()
                 if (fileName) {
                     await supabase.storage
-                        .from('fotosReceitas')
-                        .remove([fileName])
+                        .from(BUCKET_NAME)
+                        .remove([`${FOLDER_NAME}/${fileName}`])
                 }
             }
             console.error(error)
@@ -370,7 +373,7 @@ const verifyBySchema = z.object({
         })
         .email({
             message: 'O parâmetro email deve ser um email válido',
-    }),
+        }),
 })
 export const verify: RequestHandler = async (req, res, next) => {
     try {

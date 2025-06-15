@@ -1,9 +1,18 @@
-import { Router } from 'express';
-import { storeUser, deleteUser, indexUser, loginUser, resetPasswordRequestUser, resetPasswordUser, showUser, updateUser } from '../controllers/userController';
-import userUpload from "../middlewares/uploadMiddleware"; 
-import authMiddleware from "../middlewares/authMiddleware"; 
- 
-const router: Router = Router();
+import { Router } from 'express'
+import {
+    storeUser,
+    deleteUser,
+    indexUser,
+    loginUser,
+    resetPasswordRequestUser,
+    resetPasswordUser,
+    showUser,
+    updateUser,
+} from '../controllers/userController'
+import userUpload from '../middlewares/uploadMiddleware'
+import authMiddleware from '../middlewares/authMiddleware'
+
+const router: Router = Router()
 
 /**
  * @swagger
@@ -43,7 +52,7 @@ const router: Router = Router();
  *       400:
  *         description: Erro na criação do usuário
  */
-router.post('/usuario', userUpload.single('fotoUsu'), storeUser);
+router.post('/usuario', userUpload.single('fotoUsu'), storeUser)
 
 /**
  * @swagger
@@ -72,7 +81,7 @@ router.post('/usuario', userUpload.single('fotoUsu'), storeUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/usuario/login', loginUser);
+router.post('/usuario/login', loginUser)
 
 /**
  * @swagger
@@ -101,7 +110,7 @@ router.post('/usuario/login', loginUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/usuario/reset', resetPasswordRequestUser);
+router.post('/usuario/reset', resetPasswordRequestUser)
 
 /**
  * @swagger
@@ -135,7 +144,7 @@ router.post('/usuario/reset', resetPasswordRequestUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/usuario/reset/:token', resetPasswordUser);
+router.post('/usuario/reset/:token', resetPasswordUser)
 
 /**
  * @swagger
@@ -153,21 +162,21 @@ router.post('/usuario/reset/:token', resetPasswordUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/usuario', authMiddleware, indexUser);
+router.get('/usuario', authMiddleware, indexUser)
 
 /**
  * @swagger
- * /api/usuario/{email}:
+ * /api/usuario/{id}:
  *   get:
- *     summary: Obtém um usuário pelo email
+ *     summary: Obtém um usuário pelo ID
  *     tags: [Usuários]
  *     parameters:
  *       - in: path
- *         name: email
+ *         name: id
  *         schema:
  *           type: string
  *         required: true
- *         description: Email do usuário
+ *         description: ID do usuário
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -180,21 +189,21 @@ router.get('/usuario', authMiddleware, indexUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/usuario/:email', authMiddleware, showUser);
+router.get('/usuario/:id', authMiddleware, showUser)
 
 /**
  * @swagger
- * /api/usuario/{email}:
+ * /api/usuario/{id}:
  *   put:
  *     summary: Atualiza um usuário
  *     tags: [Usuários]
  *     parameters:
  *       - in: path
- *         name: email
+ *         name: id
  *         schema:
  *           type: string
  *         required: true
- *         description: Email do usuário
+ *         description: ID do usuário
  *     requestBody:
  *       required: true
  *       content:
@@ -229,21 +238,26 @@ router.get('/usuario/:email', authMiddleware, showUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/usuario/:email', authMiddleware, userUpload.single('fotoUsu'), updateUser);
+router.put(
+    '/usuario/:id',
+    authMiddleware,
+    userUpload.single('fotoUsu'),
+    updateUser,
+)
 
 /**
  * @swagger
- * /api/usuario/{email}:
+ * /api/usuario/{id}:
  *   delete:
- *     summary: Deleta um usuário pelo email
+ *     summary: Deleta um usuário pelo ID
  *     tags: [Usuários]
  *     parameters:
  *       - in: path
- *         name: email
+ *         name: id
  *         schema:
  *           type: string
  *         required: true
- *         description: Email do usuário
+ *         description: ID do usuário
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -256,6 +270,6 @@ router.put('/usuario/:email', authMiddleware, userUpload.single('fotoUsu'), upda
  *       500:
  *         description: Erro interno do servidor
  */
-router.delete('/usuario/:email', authMiddleware, deleteUser);
+router.delete('/usuario/:id', authMiddleware, deleteUser)
 
-export default router;
+export default router

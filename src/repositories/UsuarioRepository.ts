@@ -2,6 +2,7 @@ import type { Prisma, usuarios } from '../../generated/prisma/client'
 
 export interface UsuarioRepository {
     findAll(): Promise<usuarios[]>
+    findById(id: string): Promise<usuarios | null>
     findByEmail({ email }: Pick<usuarios, 'email'>): Promise<usuarios | null>
     getMonitorStatusByEmail({
         email,
@@ -19,7 +20,7 @@ export interface UsuarioRepository {
         tokens,
     }: Prisma.usuariosUncheckedCreateInput): Promise<usuarios>
     updateOne({
-        email,
+        id,
         foto_usuario,
         is_monitor,
         nivel_consciencia,
@@ -28,7 +29,7 @@ export interface UsuarioRepository {
         telefone,
         tokens,
     }: {
-        email: usuarios['email']
+        id: usuarios['id']
         foto_usuario?: usuarios['foto_usuario']
         is_monitor?: usuarios['is_monitor']
         nivel_consciencia?: usuarios['nivel_consciencia']
@@ -37,6 +38,6 @@ export interface UsuarioRepository {
         telefone?: usuarios['telefone']
         tokens?: usuarios['tokens']
     }): Promise<usuarios>
-    delete({ email }: Pick<usuarios, 'email'>): Promise<void>
+    delete({ id }: Pick<usuarios, 'id'>): Promise<void>
     updatePasswordByEmail(email: string, senha: string): Promise<void>
 }
