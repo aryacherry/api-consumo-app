@@ -4,6 +4,7 @@ export interface SubtemaRepository {
     create(subtema: Prisma.subtemasUncheckedCreateInput): Promise<subtemas>
     findById(id: string): Promise<subtemas | null>
     findByTemaId({ tema_id }: Pick<subtemas, 'tema_id'>): Promise<subtemas[]>
+    findByTemaIdAndName(tema_id: string, nome: string): Promise<subtemas | null>
     findAll(): Promise<subtemas[]>
     update(
         id: string,

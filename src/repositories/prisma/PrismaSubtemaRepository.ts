@@ -8,6 +8,17 @@ export class PrismaSubtemaRepository implements SubtemaRepository {
     constructor() {
         this.prisma = prisma
     }
+    findByTemaIdAndName(
+        tema_id: string,
+        nome: string,
+    ): Promise<subtemas | null> {
+        return this.prisma.subtemas.findFirst({
+            where: {
+                tema_id,
+                nome,
+            },
+        })
+    }
     findByName({ nome }: Pick<subtemas, 'nome'>): Promise<subtemas | null> {
         return this.prisma.subtemas.findFirst({
             where: {

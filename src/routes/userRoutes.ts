@@ -42,7 +42,7 @@ const router: Router = Router()
  *                 description: Nível de conscientização do usuário (0-5)
  *               isMonitor:
  *                 type: boolean
- *               fotoUsu:
+ *               avatar:
  *                 type: string
  *                 format: binary
  *                 description: Imagem de perfil do usuário
@@ -52,7 +52,7 @@ const router: Router = Router()
  *       400:
  *         description: Erro na criação do usuário
  */
-router.post('/usuario', userUpload.single('fotoUsu'), storeUser)
+router.post('/usuario', userUpload.single('avatar'), storeUser)
 
 /**
  * @swagger
@@ -222,7 +222,7 @@ router.get('/usuario/:id', authMiddleware, showUser)
  *               senha:
  *                 type: string
  *                 description: Nova senha do usuário, caso queira alterar
- *               fotoUsu:
+ *               avatar:
  *                 type: string
  *                 format: binary
  *                 description: Imagem de perfil do usuário
@@ -241,7 +241,7 @@ router.get('/usuario/:id', authMiddleware, showUser)
 router.put(
     '/usuario/:id',
     authMiddleware,
-    userUpload.single('fotoUsu'),
+    userUpload.single('avatar'),
     updateUser,
 )
 

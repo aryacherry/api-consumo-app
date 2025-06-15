@@ -12,7 +12,38 @@ export class PrismaDicaRepository implements DicaRepository {
     constructor() {
         this.prisma = prisma
     }
-    findAllByThemeAndSubtema(temaId: string, subtemaId: string): Promise<(dicas & { dicas_subtemas: dicas_subtemas[] })[]> {
+    update(
+        id: string,
+        dica: Prisma.dicasUncheckedUpdateInput,
+    ): Promise<
+        Prisma.dicasGetPayload<{
+            select: {
+                id: true
+                titulo: true
+                conteudo: true
+                is_verify: true
+                verify_by: true
+                is_created_by_specialist: true
+            }
+        }>
+    > {
+        return this.prisma.dicas.update({
+            where: { id },
+            data: dica,
+            select: {
+                id: true,
+                titulo: true,
+                conteudo: true,
+                is_verify: true,
+                verify_by: true,
+                is_created_by_specialist: true,
+            },
+        })
+    }
+    findAllByThemeAndSubtema(
+        temaId: string,
+        subtemaId: string,
+    ): Promise<(dicas & { dicas_subtemas: dicas_subtemas[] })[]> {
         return this.prisma.dicas.findMany({
             where: {
                 tema_id: temaId,
@@ -51,12 +82,12 @@ export class PrismaDicaRepository implements DicaRepository {
         })
     }
 
-    async delete(id: dicas['id']) {
+    async delete(id: string) {
         await this.prisma.dicas.delete({
             where: { id },
         })
     }
-    async findById(id: dicas['id']) {
+    findById(id: string) {
         return this.prisma.dicas.findUnique({
             where: { id },
             include: {
@@ -64,7 +95,7 @@ export class PrismaDicaRepository implements DicaRepository {
             },
         })
     }
-    async create({
+    create({
         usuario_id,
         tema_id,
         verify_by,
@@ -89,13 +120,8 @@ export class PrismaDicaRepository implements DicaRepository {
             },
         })
     }
-    async update(id: dicas['id'], dica: Prisma.dicasUncheckedUpdateInput) {
-        return this.prisma.dicas.update({
-            where: { id },
-            data: dica,
-        })
-    }
-    async findAllWithCorrelacaoOrderById() {
+
+    findAllWithCorrelacaoOrderById() {
         return this.prisma.dicas.findMany({
             orderBy: {
                 id: 'asc',

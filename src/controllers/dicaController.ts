@@ -5,6 +5,7 @@ import { PrismaSubtemaRepository } from '../repositories/prisma/PrismaSubtemaRep
 import { PrismaTemaRepository } from '../repositories/prisma/PrismaTemaRepository'
 import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository'
 import { z } from 'zod'
+import { prisma } from '../db'
 
 const createBodySchema = z.object({
     email: z
@@ -259,11 +260,6 @@ export const update: RequestHandler = async (req, res, next) => {
             })
             return
         }
-        const dicaAtualizada = await dicaRepository.update(id, {
-            conteudo,
-            titulo,
-        })
-
         const temaRepository = new PrismaTemaRepository()
         const temaExists = await temaRepository.findByName({ nome: tema })
         if (!temaExists) {
@@ -272,37 +268,43 @@ export const update: RequestHandler = async (req, res, next) => {
             })
             return
         }
-        const subtemaRepository = new PrismaSubtemaRepository()
-        for (const subtema of subtemas) {
-            let subtemaData = await temaRepository.getSubtemasByTema({
-                temaId: temaExists.id,
-            })
-            if (!subtemaData || subtemaData.length === 0) {
-                const createdSubtema = await subtemaRepository.create({
-                    tema_id: temaExists.id,
-                    nome: subtema,
-                    descricao: '',
-                })
-                subtemaData = [createdSubtema]
+        const dicaAtualizada = await prisma.$transaction(async () => {
+            const subtemaRepository = new PrismaSubtemaRepository()
+            const subtemas_id: string[] = []
+            for (const subtema of subtemas) {
+                const subtemaData = await subtemaRepository.findByTemaIdAndName(
+                    temaExists.id,
+                    subtema,
+                )
+                if (!subtemaData) {
+                    const createdSubtema = await subtemaRepository.create({
+                        tema_id: temaExists.id,
+                        nome: subtema,
+                        descricao: '',
+                    })
+                    subtemas_id.push(createdSubtema.id)
+                } else {
+                    subtemas_id.push(subtemaData.id)
+                }
             }
-            const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-            await dicaSubtemaRepository.create({
-                dica_id: id,
-                subtema_id: subtemaData[0].id,
-                assunto: '',
+            return await dicaRepository.update(id, {
+                conteudo,
+                titulo,
+                tema_id: temaExists.id,
+                dicas_subtemas: {
+                    deleteMany: {
+                        dica_id: id,
+                    },
+                    createMany: {
+                        data: subtemas_id.map((subtema_id) => ({
+                            dica_id: id,
+                            subtema_id,
+                            assunto: '',
+                        })),
+                    },
+                },
             })
-        }
-
-        const dicaSubtemaRepository = new PrismaDicaSubtemaRepository()
-        const subtemasAtuais = await dicaSubtemaRepository.findByDicaId(id)
-
-        const subtemasParaRemover = subtemasAtuais.filter(
-            (subtemaAtual) => !subtemas.includes(subtemaAtual.subtema_id),
-        )
-
-        if (subtemasParaRemover.length > 0) {
-            await dicaSubtemaRepository.deleteMany(id)
-        }
+        })
 
         res.status(200).json({
             dica: dicaAtualizada,
