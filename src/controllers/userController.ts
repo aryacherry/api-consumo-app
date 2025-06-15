@@ -7,6 +7,8 @@ import type { RequestHandler } from 'express'
 import { PrismaUsuarioRepository } from '../repositories/prisma/PrismaUsuarioRepository'
 import { z } from 'zod'
 
+const BUCKET_NAME = 'photos'
+const FOLDER_NAME = 'fotoPerfil'
 const userPrismaRepository = new PrismaUsuarioRepository()
 
 const storeUserSchema = z.object({
@@ -101,8 +103,8 @@ export const storeUser: RequestHandler = async (req, res, next) => {
     } catch (error) {
         if (uploadedImagePath) {
             await supabase.storage
-                .from('fotoPerfil')
-                .remove([uploadedImagePath])
+                .from(BUCKET_NAME)
+                .remove([`${FOLDER_NAME}/${uploadedImagePath}`])
         }
         next(error)
     }
@@ -256,8 +258,8 @@ export const updateUser: RequestHandler = async (req, res, next) => {
     } catch (error) {
         if (uploadedImagePath) {
             await supabase.storage
-                .from('fotoPerfil')
-                .remove([uploadedImagePath])
+                .from(BUCKET_NAME)
+                .remove([`${FOLDER_NAME}/${uploadedImagePath}`])
         }
         next(error)
     }
@@ -445,8 +447,8 @@ async function uploadImage(file: Express.Multer.File) {
     try {
         const uniqueFileName = `${uuidv4()}-${file.originalname}`
         const { data, error } = await supabase.storage
-            .from('fotoPerfil')
-            .upload(uniqueFileName, file.buffer, {
+            .from(BUCKET_NAME)
+            .upload(`${FOLDER_NAME}/${uniqueFileName}`, file.buffer, {
                 contentType: file.mimetype,
             })
 
@@ -454,7 +456,7 @@ async function uploadImage(file: Express.Multer.File) {
             throw new Error(`Erro ao fazer upload da imagem: ${error.message}`)
 
         const { data: publicURL } = supabase.storage
-            .from('fotoPerfil')
+            .from(BUCKET_NAME)
             .getPublicUrl(data.path)
 
         return { url: publicURL.publicUrl, path: data.path }
