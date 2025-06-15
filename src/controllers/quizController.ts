@@ -33,7 +33,7 @@ export const store: RequestHandler = async (req, res, next) => {
 export const index: RequestHandler = async (_req, res, next) => {
     try {
         const quizes = await quizRepository.findAll()
-        res.json(quizes)
+        res.status(200).json(quizes)
     } catch (error) {
         next(error)
     }
@@ -51,7 +51,7 @@ export const show: RequestHandler = async (req, res, next) => {
             return
         }
 
-        res.json(quiz)
+        res.status(200).json(quiz)
     } catch (error) {
         next(error)
     }
@@ -85,7 +85,7 @@ export const update: RequestHandler = async (req, res, next) => {
 
         const updatedQuiz = await quizRepository.update(id, quizData)
 
-        res.json({
+        res.status(200).json({
             message: 'Quiz atualizado com sucesso',
             data: updatedQuiz
         })
@@ -158,7 +158,7 @@ export const validateAnswer: RequestHandler = async (req, res, next) => {
 
         const isCorrect = normalizeAnswer(respostaEscolhida) === normalizeAnswer(quiz.resposta_verdadeira)
 
-        res.json({
+        res.status(200).json({
             message: isCorrect ? 'Resposta correta!' : 'Resposta incorreta.',
             correctAnswer: quiz.resposta_verdadeira,
             isCorrect

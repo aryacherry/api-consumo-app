@@ -76,8 +76,10 @@ router.post('/quizes', store);
  *     responses:
  *       200:
  *         description: Detalhes do quiz
+ *       400:
+ *         description: Erro ao obter o quiz
  *       404:
- *         description: Quiz não encontrado
+ *         description: O quiz com o ID fornecido não foi encontrado
  *       500:
  *         description: Erro interno do servidor
  */
@@ -124,8 +126,10 @@ router.get('/quizes/:id', show);
  *     responses:
  *       200:
  *         description: Quiz atualizado com sucesso
+ *       400:
+ *         description: Erro ao atualizar o quiz
  *       404:
- *         description: Quiz não encontrado
+ *         description: O quiz com o ID fornecido não foi encontrado
  *       500:
  *         description: Erro interno do servidor
  */
@@ -147,8 +151,10 @@ router.put('/quizes/:id', update);
  *     responses:
  *       204:
  *         description: Quiz deletado com sucesso
+ *       400:
+ *         description: Erro ao deletar o quiz
  *       404:
- *         description: Quiz não encontrado
+ *         description: O quiz com o ID fornecido não foi encontrado
  *       500:
  *         description: Erro interno do servidor
  */
