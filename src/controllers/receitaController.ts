@@ -10,7 +10,7 @@ import { tryParseJson } from '../utils/tryParseJson'
 import { randomUUID } from 'node:crypto'
 
 const BUCKET_NAME = 'photos'
-const FOLDER_NAME = 'fotosReceitas'
+const FOLDER_NAME = 'fotosReceita'
 
 const receitaSchema = z.object({
     titulo: z.string({
