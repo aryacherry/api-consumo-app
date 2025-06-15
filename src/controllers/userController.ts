@@ -41,12 +41,12 @@ const storeUserSchema = z.object({
         .string()
         .min(6, 'A senha deve ter pelo menos 6 caracteres.')
         .max(255, 'A senha deve ter no máximo 255 caracteres.'),
-    nivelConsciencia: z
+    nivelConsciencia: z.coerce
         .number()
         .min(0, 'Nível de consciência deve ser pelo menos 0.')
         .max(5, 'Nível de consciência deve ser no máximo 5.'),
-    isMonitor: z.boolean(),
-    fotoUsu: z.string().url().optional(),
+    isMonitor: z.coerce.boolean(),
+    avatar: z.string().url().optional(),
 })
 
 export const storeUser: RequestHandler = async (req, res, next) => {
@@ -175,13 +175,13 @@ const updateUserBodySchema = z.object({
         .min(6, 'A senha deve ter pelo menos 6 caracteres.')
         .max(255, 'A senha deve ter no máximo 255 caracteres.')
         .optional(),
-    nivelConsciencia: z
+    nivelConsciencia: z.coerce
         .number()
         .min(0, 'Nível de consciência deve ser pelo menos 0.')
         .max(5, 'Nível de consciência deve ser no máximo 5.')
         .optional(),
-    isMonitor: z.boolean().optional(),
-    fotoUsu: z.string().url().optional(),
+    isMonitor: z.coerce.boolean().optional(),
+    avatar: z.string().url().optional(),
 })
 
 const updateUserParamsSchema = z.object({
