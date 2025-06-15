@@ -154,6 +154,38 @@ router.put('/quizes/:id', update);
  */
 router.delete('/quizes/:id', destroy);
 
-
+/**
+ * @swagger
+ * /api/quizes/{quizId}/validar:
+ *   post:
+ *     summary: Valida a resposta de um quiz
+ *     tags: [Quizes]
+ *     parameters:
+ *       - in: path
+ *         name: quizId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do quiz
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               resposta:
+ *                 type: number
+ *                 description: Resposta do usuário para validação
+ *     responses:
+ *       200:
+ *         description: Resposta validada com sucesso
+ *       400:
+ *         description: Resposta inválida ou erro na validação
+ *       404:
+ *         description: O quiz com o ID fornecido não foi encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
 router.post('/quizes/:id/validar', validateAnswer)
 export default router;
