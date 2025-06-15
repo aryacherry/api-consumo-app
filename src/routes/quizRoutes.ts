@@ -171,7 +171,7 @@ router.delete('/quizes/:id', destroy);
  *         name: quizId
  *         required: true
  *         schema:
- *           type: number
+ *           type: string
  *         description: ID do quiz
  *     requestBody:
  *       required: true
