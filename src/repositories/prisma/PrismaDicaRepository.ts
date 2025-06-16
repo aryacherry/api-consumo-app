@@ -12,21 +12,7 @@ export class PrismaDicaRepository implements DicaRepository {
     constructor() {
         this.prisma = prisma
     }
-    update(
-        id: string,
-        dica: Prisma.dicasUncheckedUpdateInput,
-    ): Promise<
-        Prisma.dicasGetPayload<{
-            select: {
-                id: true
-                titulo: true
-                conteudo: true
-                is_verify: true
-                verify_by: true
-                is_created_by_specialist: true
-            }
-        }>
-    > {
+    update(id: string, dica: Prisma.dicasUncheckedUpdateInput) {
         return this.prisma.dicas.update({
             where: { id },
             data: dica,
