@@ -385,7 +385,21 @@ export const resetPasswordRequestUser: RequestHandler = async (
             from: process.env.EMAIL_USER,
             to: user.email,
             subject: 'Redefinição de Senha',
-            html: `<p>Seu token de redefinição de senha é:</p><p><strong>${token}</strong></p>`,
+            html: `
+            <h2>Redefinição de Senha</h2>
+
+            <p>Olá,</p>
+
+            <p>Recebemos uma solicitação para redefinir a sua senha. Para continuar, utilize o código abaixo:</p>
+
+            <p style="font-size: 20px; font-weight: bold; color:rgb(35, 98, 167);">${token}</p>
+
+            <p>Este código é válido por <strong>1 hora</strong>.</p>
+
+            <p>Se você não solicitou esta alteração, pode desconsiderar este e-mail com segurança.</p>
+
+            <p>Atenciosamente,<br>Sua equipe de suporte</p>
+            `,
         }
 
         await transporter.sendMail(mailOptions)
