@@ -287,17 +287,16 @@ export const update: RequestHandler = async (req, res, next) => {
                     subtemas_id.push(subtemaData.id)
                 }
             }
-            return await dicaRepository.update(id, {
+            return await dicaRepository.update(dicaExists.id, {
                 conteudo,
                 titulo,
                 tema_id: temaExists.id,
                 dicas_subtemas: {
                     deleteMany: {
-                        dica_id: id,
+                        dica_id: dicaExists.id,
                     },
                     createMany: {
                         data: subtemas_id.map((subtema_id) => ({
-                            dica_id: id,
                             subtema_id,
                             assunto: '',
                         })),
